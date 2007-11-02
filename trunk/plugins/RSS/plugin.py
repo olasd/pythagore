@@ -43,6 +43,8 @@ import supybot.ircutils as ircutils
 import supybot.registry as registry
 import supybot.callbacks as callbacks
 
+import tiny
+
 def getFeedName(irc, msg, args, state):
     if not registry.isValidRegistryName(args[0]):
         state.errorInvalid('feed name', args[0],
@@ -134,12 +136,24 @@ class RSS(callbacks.Plugin):
                     self.releaseLock(url)
                     time.sleep(0.1) # So other threads can run.
 
-    def buildHeadlines(self, headlines, channel, config='announce.showLinks'):
+    def buildHeadlines(self, headlines, channel, config='announce.showLinks', title=None):
         newheadlines = []
+        #t = tiny.TinyUrl()
+        if title:
+            pre = '[' + title + '] '
+        else:
+            pre = ''
         if self.registryValue(config, channel):
             for headline in headlines:
                 if headline[1]:
-                    newheadlines.append(format('%s %u', *headline))
+                    url = headline[1]
+                    if True:
+                        t = tiny.TinyUrl()
+                        url = t.get(url)
+                    newheadlines.append(format('%s%s %s',
+                                    pre,
+                                    headline[0],
+                                    url.encode('utf-8')))
                 else:
                     newheadlines.append(format('%s', headline[0]))
         else:
@@ -177,6 +191,9 @@ class RSS(callbacks.Plugin):
                     newheadlines[i] = None
             newheadlines = filter(None, newheadlines) # Removes Nones.
             if newheadlines:
+                info = newresults.get('feed')
+                conv = self._getConverter(newresults)
+                title = conv(info.get('title', 'unavailable'))
                 for channel in channels:
                     bold = self.registryValue('bold', channel)
                     sep = self.registryValue('headlineSeparator', channel)
@@ -185,9 +202,10 @@ class RSS(callbacks.Plugin):
                     if bold:
                         pre = ircutils.bold(pre)
                         sep = ircutils.bold(sep)
-                    headlines = self.buildHeadlines(newheadlines, channel)
-                    irc.replies(headlines, prefixer=pre, joiner=sep,
-                                to=channel, prefixNick=False, private=True)
+                    headlines = self.buildHeadlines(newheadlines, channel, title=title)
+                    for headline in headlines:
+                     irc.reply(headline, to=channel, action=True,
+                               private=True)
         finally:
             self.releaseLock(url)
 
@@ -380,13 +398,17 @@ class RSS(callbacks.Plugin):
         if not headlines:
             irc.error('Couldn\'t get RSS feed.')
             return
-        headlines = self.buildHeadlines(headlines, channel, 'showLinks')
+        info = feed.get('feed')
+        conv = self._getConverter(feed)
+        title = conv(info.get('title', 'unavailable'))
+        headlines = self.buildHeadlines(headlines, channel, 'showLinks', title=title)
         if n:
             headlines = headlines[:n]
         sep = self.registryValue('headlineSeparator', channel)
         if self.registryValue('bold', channel):
             sep = ircutils.bold(sep)
-        irc.replies(headlines, joiner=sep)
+        for headline in headlines:
+            irc.reply(headline, action=True)
     rss = wrap(rss, ['url', additional('int')])
 
     def info(self, irc, msg, args, url):

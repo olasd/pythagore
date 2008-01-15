@@ -1,0 +1,68 @@
+x.x.x (YYYY-MM-DD)
+==================
+
+ - Jabber:
+   - Rework ConnectAuthenticator to work with initializer objects that
+     provide a stream initialization step.
+   - Reimplement iq:auth as an initializer.
+   - Reimplement TLS negotiation as an initializer.
+   - Implement SASL authentication, resource binding and session establishment.
+   - Add XMPPAuthenticator as a XMPP 1.0 client authenticator (only), along
+     with XMPPClientFactory.
+   - Add support for working with pre-XMPP-1.0 error stanzas.
+   - Add full tests for protocols/jabber/xmlstream.py
+   - Properly import SSL libraries, and only fail TLS when really needed.
+   - Remove hasFeature() from XmlStream as you can test (uri, name) in
+	 xs.features.
+   - Add sendFooter() and sendStreamError() to XmlStream
+
+0.4.0 (2006-05-21)
+==================
+
+Features
+--------
+ - Jabber:
+   - Add support for stream and stanza level errors
+   - Create new IQ stanza helper that works with deferreds
+   - Add TLS support for initiating entities to XmlStream
+   - Fix account registration
+ - Xish:
+   - Fix various namespace issues
+   - Add IElement
+   - Store namespace declarations in parsed XML for later serialization
+ - Fix user name/group collision in server service (#1655).
+ - Correctly recognize MSN capability messages (#861).
+
+Fixes
+-----
+ - Misc: #1283, #1296, #1302, #1424
+ - Fix unicode/str confusion in IRC server service.
+
+
+0.3.0:
+ - Jabber:
+   - Fix digest authentication in Jabber
+   - Add Jabber xmlstream module that contains the Jabber specific bits that
+     got factored out of Twisted Xish's xmlstream, and make it suitable for
+     implementing full XMPP support.
+ - Xish:
+   - Fixed serialization in _ListSerializer
+   - Removed unneeded extra whitespace generated in serialization
+   - Removed _Serializer in favour of _ListSerializer
+   - Use unicode objects for representing serialized XML, instead of utf-8
+     encoded str objects.
+   - Properly catch XML parser errors
+   - Rework and fix element stream test cases
+   - Strip xmlstream from all Jabber specifics that moved to Twisted Words
+   - Added exhaustive docstrings to xmlstream.
+ - Words Service:
+   - Complete rewrite
+   - Not backwards compatible
+
+0.1.0:
+ - Fix some miscellaneous bugs in OSCAR
+ - Add QUIT notification for IRC
+ - Fix message wrapping
+ - Misc Jabber fixes
+ - Add stringprep support for Jabber IDs
+   This only works properly on 2.3.2 or higher

@@ -1,0 +1,11 @@
+host: irc.teepi.net
+port: 6667
+nick: Pyth
+logdir: teepi
+logsuffix: .log
+channels: 
+    - pytest
+    - pytest2
+    - pytest3
+encodings:
+    "pcinpact-linux": "UTF-8"

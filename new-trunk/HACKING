@@ -1,0 +1,33 @@
+This file contains some indications about how to hack the internals of
+the Pythagore bot.
+
+* Modules:
+   - Naming conventions:
+ The modules should subclass PythagoreModule, and have a class definition
+whose name is the file name.
+The callbacks should be put in the exports dict, to be registered at
+the module's loading.
+
+   - Callbacks:
+ The callbacks should have the header:
+
+def callback(self, channel, nick, msg)
+
+ where self is the Module object, channel the channel where the event
+happens, nick the caller's nick, and msg the received message. The bot
+instance is in self.bot, so that you can call, for instance, self.bot.say 
+to make the bot msg a channel or an user.
+
+* Internals:
+   - Module registration:
+ At each module registration (done by the registerModule function),
+the module is either loaded via __import__ if it's the first time
+it is loaded, or it is unregistered and reloaded, and put in the modules
+dict. Then, the module is instantiated in the moduleinstances dict, and 
+its symbols, listed in the export dict, are added to the keywords dict.
+
+   - Module unregistering:
+ When the module is unregistered, all of its exported symbols are removed
+from the keywords dict, and then the module instance is deleted from the
+moduleinstances dict. The module is not unloaded, but it is reloaded if
+it is registered again under the same name.

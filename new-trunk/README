@@ -1,0 +1,29 @@
+Pythagore is an IRC bot initially aimed at giving functionality such as a 
+quote database, channel statistics et al. to users of the Teepi IRC 
+Network <irc.teepi.net>.
+
+Pythagore is written in Python using the twisted framework for network
+interaction, PyYAML to store modules' configuration, and SQLAlchemy for
+the channels and quotes database. It is licensed under the GNU General
+Public License (or GPL) version 2 (see LICENSE for details).
+
+Dependencies : 
+
+- python v2.4 or greater <http://python.org/> 
+      (available as debian-package python)
+- twisted-words <http://twistedmatrix.com/trac/wiki/TwistedWords>
+      (python-twisted-words)
+- PyYAML <http://pyyaml.org/> (python-yaml)
+- SQLAlchemy <http://www.sqlalchemy.org/> (python-sqlalchemy)
+- And a database backend for SQLAlchemy, either one of:
+    * pysqlite <http://initd.org/tracker/pysqlite> (python-pysqlite2)
+    * MYSQLdb <http://sf.net/projects/mysql-python> (python-mysqldb)
+  or one listed on the SQLAlchemy website (See page
+  <http://www.sqlalchemy.org/docs/04/dbengine.html>)
+
+
+Running Pythagore :
+
+It's quite easy: edit configuration files to fit your needs in the Config/
+subdirectory (it should be YAML files), and then run Pythagore.py to
+launch the bot.

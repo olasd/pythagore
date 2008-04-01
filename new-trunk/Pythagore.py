@@ -176,11 +176,11 @@ class PythagoreBotFactory(protocol.ClientFactory):
         self.conf = conf
 
     def clientConnectionLost(self, connector, reason):
-        """If we get disconnected, reconnect to server."""
+        """If we got disconnected, reconnect to server."""
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        print "connection failed:", reason
+        print "connection failed: ", reason
         connector.connect()
 
 def main():

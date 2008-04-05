@@ -35,6 +35,7 @@ class PythagoreModule:
         self.exports = {}
         self.bot = pythagore
         self.loadConfig()
+		self.module = self.__class__.__name__
 
     def loadConfig(self):
         """Configuration initialization. Override this if you do not want 
@@ -45,7 +46,7 @@ class PythagoreModule:
             self.config = {}
             return
 
-        name = self.__class__.__name__
+        name = self.module
         try:
             configfile = file("Config" + os.sep + name + ".yml", 'r')
             self.config = yaml.safe_load(configfile)

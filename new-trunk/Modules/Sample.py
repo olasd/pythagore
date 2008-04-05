@@ -33,10 +33,10 @@ class Filename(PythagoreModule):
         self.exports['firstmethod'] = "firstMethod"
         self.exports['secondmethod'] = "secondMethod"
 
-	# all methods receive the same parameters : channel, nick, msg
+    # all methods receive the same parameters : channel, nick, msg
     def firstMethod(self, channel, nick, msg):
-		#code here
+        #code here
 
     def secondMethod(self, channel, nick, msg):
-		#here too
+        #here too
 

@@ -29,8 +29,6 @@ import re
 # system imports
 import time, sys, os
 
-sys.path.append('lib')
-
 # twisted imports
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol, threads

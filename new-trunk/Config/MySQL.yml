@@ -1,0 +1,7 @@
+db: pythagore
+user: pythagore
+passwd:
+host:
+port:
+table:
+    "Quotes": "quotes"

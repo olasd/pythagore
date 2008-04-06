@@ -7,6 +7,7 @@
 # Quotes.py : Quotes module for Pythagore bot
 #
 # Copyright (C) 2008 Nicolas Maître <nox@teepi.net>
+# Copyright (C) 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -24,7 +25,7 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Structure de la table :
-# | id | nick | channel | time | quote |
+# | qid | content | author | cid | timestamp | deleted |
 
 from PythagoreModuleMySQL import PythagoreModuleMySQL
 from random import randint
@@ -36,10 +37,11 @@ class Quotes(PythagoreModuleMySQL):
         self.exports['addquote'] = "addQuote"
         self.exports['remquote'], self.exports['delquote'] = "removeQuote","removeQuote"
         self.exports['randquote'] = "randomQuote"
-        self.table = self.mysqlConfig['tables']['Quotes']
+        self.qtable = self.mysqlConfig['tables']['Quotes']
+        self.ctable = self.mysqlConfig['tables']['Channels']
     
-    def searchdbByID(self, id):
-        query = "SELECT id from %s where id=%s"
+    def searchQuoteByQID(self, id):
+        query = "SELECT qid from %(table)s where qid=%(id)s" % ('table': self.qtable, 'id': id)
         if self.executeQuery(query):
             line = self.cur.fetchone()
             if line:
@@ -66,10 +68,10 @@ class Quotes(PythagoreModuleMySQL):
             error(channel, "Erreur ! Pas assez de paramètres")
         elif len(words) == 1:
             id = int(words[0])
-            row =  self.searchdbByID(id)
+            row =  self.searchQuoteByQID(id)
             if row:
                 if self.verifyNick(nick, row):
-                    query = "ALTER TABLE %s DROP INDEX %s" % (self.table,id)
+                    query = "UPDATE %(table)s set deleted=TRUE where qid=%(id)s" % ('table': self.qtable, 'id': id)
                     if self.executeQuery(query):
                         self.dbConn.commit()
                 else:
@@ -99,9 +101,9 @@ class Quotes(PythagoreModuleMySQL):
                 chan = words[0]
                 if chan[0] == "#":
                     searchWithChan = 1
-                    query = "SELECT * from %s WHERE channel='%s'" % (self.table,chan)
+                    query = "SELECT * from %s WHERE cid='%s'" % (self.qtable, self.getCIDByName(chan))
             else:
-                query = "SELECT * from %s" % self.table
+                query = "SELECT * from %s" % self.qtable
             if self.executeQuery(query):
                 if self.cur.fetchall():
                     randomrow = self.cur[randint(0,len(self.cur))]
@@ -112,3 +114,11 @@ class Quotes(PythagoreModuleMySQL):
                     else:
                         say(channel, "Pas de citation dans la base de données")
 
+    def getQuoteByQID(self, id, extra_clauses=''):
+        """Récupère une quote par son identifiant. 
+        La chaîne extra_clauses sert à restreindre la recherche dans le WHERE"""
+        pass
+
+    def getCIDByName(self, channel_name):
+        """Récupère l'identifiant du salon dans la table channels par son nom"""
+        pass

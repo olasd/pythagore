@@ -5,3 +5,4 @@ host:
 port:
 table:
     "Quotes": "quotes"
+    "Channels": "channels"

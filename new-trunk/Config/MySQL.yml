@@ -3,6 +3,6 @@ user: pythagore
 passwd:
 host:
 port:
-table:
+tables:
     "Quotes": "quotes"
     "Channels": "channels"

@@ -39,9 +39,9 @@ class Quotes(PythagoreModuleMySQL):
         self.exports['randquote'] = "randomQuote"
         self.qtable = self.mysqlConfig['tables']['Quotes']
         self.ctable = self.mysqlConfig['tables']['Channels']
-    
+
     def searchQuoteByQID(self, id):
-        query = "SELECT qid from %(table)s where qid=%(id)s" % ('table': self.qtable, 'id': id)
+        query = "SELECT qid from %(table)s where qid=%(id)s" % {'table': self.qtable, 'id': id}
         if self.executeQuery(query):
             line = self.cur.fetchone()
             if line:
@@ -71,17 +71,17 @@ class Quotes(PythagoreModuleMySQL):
             row =  self.searchQuoteByQID(id)
             if row:
                 if self.verifyNick(nick, row):
-                    query = "UPDATE %(table)s set deleted=TRUE where qid=%(id)s" % ('table': self.qtable, 'id': id)
+                    query = "UPDATE %(table)s set deleted=TRUE where qid=%(id)s" % {'table': self.qtable, 'id': id}
                     if self.executeQuery(query):
                         self.dbConn.commit()
                 else:
                     error(channel, 
-                        "Erreur ! Vous n'avez pas le droit d'effacer 
+                        "Erreur ! Vous n'avez pas le droit d'effacer\
                         cette citation"
                         )
             else:
                 error(channel,
-                        "Erreur ! La citation n°%s n'existe pas dans
+                        "Erreur ! La citation n°%s n'existe pas dans\
                         la base de données" % id
                     )
         else:

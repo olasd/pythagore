@@ -10,6 +10,7 @@
 # in a module class for Pythagore
 #
 # Copyright (C) 2008 Nicolas Maître <nox@teepi.net>
+# Copyright (C) 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -27,49 +28,40 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 from PythagoreModule import PythagoreModule
+import yaml
 import os, MySQLdb
 
 class PythagoreModuleMySQL(PythagoreModule):
     def __init__(self, pythagore):
         PythagoreModule.__init__(self, pythagore)
-		self.loadMySQLConfig()
-		if not self.mysqlConfig:
-			print "Please configure Config/MySQL.yml\nUnloading %s module" % self.module
-			unregisterModule(self.module)
-			return
-		self.connectToDB()
-		self.cur = self.dbConn.cursor()
+        self.loadMySQLConfig()
+        self.connectToDB()
+        self.cur = self.dbConn.cursor()
 
-	def loadMySQLConfig(self):
+    def loadMySQLConfig(self):
+        configfile = file("Config" + os.sep + "MySQL.yml", 'r')
+        self.mysqlConfig = yaml.safe_load(configfile)
+        configfile.close()
+
+    def connectToDB(self):
         try:
-            configfile = file("Config" + os.sep + "MySQL.yml", 'r')
-            self.mysqlConfig = yaml.safe_load(configfile)
-            configfile.close()
-        except:
-            print "MySQL config file not open !"
-			self.mysqlConfig = {}
-            return
+            self.dbConn = MySQLdb.connect(
+                    db = self.mysqlConfig["dbname"],
+                    user = self.mysqlConfig["user"],
+                    passwd = self.mysqlConfig["passwd"],
+                    host = self.mysqlConfig["host"],
+                    port = self.mysqlConfig["port"],
+                    )
+        except Exception, err:
+            print "Connection error to MySQL database : %s" % err
 
-	def connectToDB(self):
-		if self.mysqlConfig
-			try:
-				self.dbConn = MySQLdb.connect(
-						db = self.mysqlConfig["dbname"],
-						user = self.mysqlConfig["user"],
-						passwd = self.mysqlConfig["passwd"],
-						host = self.mysqlConfig["host"],
-						port = self.mysqlConfig["port"],
-						)
-			except Exception, err:
-				print "Connection error to MySQL database : %s" % err
-
-	def executeQuery(self, query):
-		try:
-			self.cur.execute(query)
-		except Exception, err:
-			print "Invalid query : %s\nError : %s" % (query,err)
-			return 0
-		else:
-			return 1
+    def executeQuery(self, query):
+        try:
+            self.cur.execute(query)
+        except Exception, err:
+            print "Invalid query : %s\nError : %s" % (query,err)
+            return 0
+        else:
+            return 1
 
 

@@ -55,11 +55,12 @@ class PythagoreModuleMySQL(PythagoreModule):
         except Exception, err:
             print "Connection error to MySQL database : %s" % err
 
-    def executeQuery(self, query):
+    def executeQuery(self, query, *args):
+        print "query : `%s` with args `%s`" % (query, repr(args))
         try:
-            self.cur.execute(query)
+            self.cur.execute(query, args)
         except Exception, err:
-            print "Invalid query : %s\nError : %s" % (query,err)
+            print "Invalid query : `%s` with args `%s` \nError : %s" % (query, repr(args), err)
             return 0
         else:
             return 1

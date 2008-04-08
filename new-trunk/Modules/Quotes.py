@@ -31,6 +31,7 @@ from PythagoreModuleMySQL import PythagoreModuleMySQL
 import random
 from time import time
 import sys, MySQLdb
+import datetime
 
 class Quotes(PythagoreModuleMySQL):
     def __init__(self, pythagore):
@@ -79,7 +80,6 @@ class Quotes(PythagoreModuleMySQL):
             return
         # s'il y a assez de mots dans la quote
         if len(words) >= int(self.config['minWordsInQuotes']):
-            now = time()
             # on cherche le cid du channel
             cid = self.getCIDByName(channel)
             if cid:
@@ -127,28 +127,6 @@ class Quotes(PythagoreModuleMySQL):
         else:
             self.bot.error(channel, "Pas assez de paramètres.")
 
-    def isPublicChannel(self, channel):
-        "Vérifie que channel est public"
-        if isinstance(channel, str):
-            if channel[0] == '#':
-                channel = channel[1:]
-            query = """SELECT public_quotes from `%s` WHERE name=%%s"""
-        else:
-            query = """SELECT public_quotes from `%s` WHERE cid=%%s"""
-        if self.executeQuery(query % self.ctable, channel):
-            row = self.cur.fetchone()
-            if row:
-                return row[0]
-        return
-
-    def isDeleted(self, qid):
-        "Vérifie si la quote est 'deleted'"
-        if self.executeQuery("""SELECT deleted FROM `%s` WHERE qid=%%s""" % self.qtable, qid):
-            row = self.cur.fetchone()
-            if row:
-                return row[0]
-        return
-
     def getQuote(self, channel, nick, msg):
         """!quote <numéro> 
         Afficher la citation n°<numéro>"""
@@ -193,7 +171,6 @@ class Quotes(PythagoreModuleMySQL):
                     % {'ctable': self.ctable, 'qtable' : self.qtable}
                     ):
                 allrows = self.cur.fetchall()
-        # Si chan pas précisé, on utilise le chan courant
         else:
             if channel != chan and not self.isPublicChannel(chan):
                 self.bot.say(channel, "Pas de citation trouvée !")
@@ -210,39 +187,149 @@ class Quotes(PythagoreModuleMySQL):
     def searchQuote(self, channel, nick, msg):
         """!findquote [-all | -channel=#salon | -c=#salon] <recherché> 
         Permet de lancer une recherche parmis les quotes contenant le texte <recherché>"""
-        pass
+        all = False
+        allrows = ()
+        chan = channel
+        if msg is not None:
+            words = msg.split()
+
+            print words
+            if words[0] == "--all":
+                del words[0]
+                all = True
+            elif words[0].startswith("-c=") or words[0].startswith("--channel="):
+                del words[0]
+                chan = words[0].split("=", 1)[1]
+            elif len(words)<2 and words[0:1] == "--":
+                self.bot.error(channel, "Arguments incorrects !")
+                return
+            toSearch = "%"+"%".join(words)+"%"
+        
+            # Si --all
+            if all:
+                # FIXME ne prend pas en compte le chan privé courant
+                if self.executeQuery("""SELECT qid FROM `%(qtable)s` LEFT JOIN `%(ctable)s` 
+                        ON (`%(qtable)s`.cid = `%(ctable)s`.cid) 
+                        WHERE `%(ctable)s`.public_quotes = TRUE AND `%(qtable)s`.deleted = FALSE
+                        AND `%(qtable)s`.content LIKE %%s"""
+                        % {'ctable': self.ctable, 'qtable' : self.qtable},
+                        toSearch
+                        ):
+                    allrows = self.cur.fetchall()
+            # recherche dans chan particulier
+            else:
+                if channel != chan and not self.isPublicChannel(chan):
+                    self.bot.say(channel, "Pas de citation trouvée !")
+                    return
+            
+                if self.executeQuery("SELECT qid FROM `%s` WHERE cid=%%s AND deleted=FALSE AND content LIKE %%s" % self.qtable, self.getCIDByName(chan), toSearch):
+                    allrows = self.cur.fetchall()
+        
+            if allrows:
+                newrows = []
+                for i in range(0,len(allrows)):
+                    newrows.append(str(allrows[i][0]))
+                print ", ".join(newrows)
+                nbFound = len(newrows)
+                self.bot.say(channel, "%s citations trouvées :" % nbFound)
+                i = 0
+                while i < 3 and i < nbFound:
+                    self.printQuoteToChan(channel, int(newrows[i]))
+                    i=i+1
+                while i < 5 and i < nbFound:
+                    self.printQuoteToNick(nick, int(newrows[i]))
+                    i=i+1
+                if i < nbFound:
+                    self.bot.say(nick, "%s autres citations trouvées : %s" % (nbFound-5,", ".join(newrows))) 
+            else:
+                self.bot.say(channel, "Pas de citation trouvée !")
+        else:
+            self.bot.error(channel, "Précisez votre recherche !")
 
     def lastQuote(self, channel, nick, msg):
         """!lastquote [-all]
         Affiche la dernière citation enregistrée sur le salon actuel.
         Si -all est ajouté c'est la dernière citation du réseau qui sera retournée."""
-        pass
+        all = False
+        row = ()
+        if msg is not None:
+            words = msg.split()
+            if words[0] == "--all":
+                all = True
+            else:
+                self.bot.error(channel, "Arguments incorrects !")
+                return
+        if all:
+            # FIXME ne prend pas en compte le chan privé courant
+            if self.executeQuery("""SELECT qid FROM `%(qtable)s` LEFT JOIN `%(ctable)s` 
+                    ON (`%(qtable)s`.cid = `%(ctable)s`.cid) 
+                    WHERE `%(ctable)s`.public_quotes = TRUE AND `%(qtable)s`.deleted = FALSE
+                    ORDER by qid desc LIMIT 1"""
+                    % {'ctable': self.ctable, 'qtable' : self.qtable}
+                    ):
+                row = self.cur.fetchone()
+        # recherche dans chan courant
+        else:
+            if self.executeQuery("""SELECT qid FROM `%s` WHERE cid=%%s 
+                AND deleted=FALSE ORDER by qid desc LIMIT 1""" % self.qtable,
+                self.getCIDByName(channel)):
+                row = self.cur.fetchone()
+        if row:
+            self.printQuoteToChan(channel, row[0])
+        else:
+            self.bot.say(channel, "Pas de citation trouvée !")
 
     def quoteInfo(self, channel, nick, msg):
         """!quoteinfo <numéro> 
         Affiche l'auteur d'une citation ainsi que le salon et la date où la citation a été enregistrée"""
         if msg:
             try:
-                id = int(words[0])
+                id = int(msg)
             except ValueError:
                 self.bot.error(channel, "L'identifiant doit être un nombre.")
                 return
-        pass
+            query = "SELECT * from %(table)s WHERE qid=%(qid)s" % {'table':self.qtable,'qid': id}
+            if self.executeQuery(query):
+                row = self.cur.fetchone()
+                if row:
+                    t = row[4]
+                    timestamp = "%s/%s/%s à %s:%s:%s" % (t.day,t.month,t.year,t.hour,t.minute,t.second)
+                    self.bot.say(channel, "Citation n°%(qid)s ajoutée par %(author)s le %(date)s, sur %(chan)s" % {'qid':row[0],'author':row[2],'date':timestamp,'chan':self.getChanNameByCID(row[3])})
+                else:
+                    self.bot.say(channel, "Pas de citation trouvée")
+        else:
+            self.bot.error(channel, "Veuillez préciser le numéro de la citation")
 
     def enableChan(self, channel, nick, msg):
         """!quoteon 
         Permet d'activer le gestionnaire de citations, seul un opérateur du canal (@) peut l'utiliser"""
-        pass
-
+        # FIXME isOp ?
+        if 1:
+            if self.executeQuery("UPDATE `%s` SET enabled = TRUE" % self.ctable):
+                self.dbConn.commit()
+                self.bot.say(channel, "Le système de quotes a été activé")
+                
+        
     def disableChan(self, channel, nick, msg):
         """!quoteoff 
         Permet de désactiver le gestionnaire de citations, seul un opérateur du canal (@) peut l'utiliser"""
-        pass
+        # FIXME isOp ?
+        if 1:
+            if self.executeQuery("UPDATE `%s` SET enabled = FALSE" % self.ctable):
+                self.dbConn.commit()
+                self.bot.say(channel, "Le système de quotes a été désactivé")
 
     def quoteStatus(self, channel, nick, msg):
         """!quotestatus 
         Indique si le gestionnaire de citations est actif ou non"""
-        pass
+        if self.executeQuery("""SELECT enabled from %(table)s 
+            WHERE cid=%(cid)s""" % {'table':self.ctable, 'cid':self.getCIDByName(channel)}
+            ):
+            enabled = self.cur.fetchone()[0]
+            if enabled:
+                self.bot.say(channel, "Le système de quotes est activé")
+            else:
+                self.bot.say(channel, "Le système de quotes est désactivé")
 
     def getCIDByName(self, channel_name):
         """Récupère l'identifiant du salon dans la table channels par son nom"""
@@ -260,11 +347,11 @@ class Quotes(PythagoreModuleMySQL):
 
     def getChanNameByCID(self, id):
         "Renvoie le nom du chan de cid <id>"
-        
-        if self.executeQuery("""SELECT name FROM `%s` WHERE cid=%s""" % self.ctable, id):
+ 
+        if self.executeQuery("""SELECT name FROM `%s` WHERE cid=%%s""" % self.ctable, id):
             row = self.cur.fetchone()
             if row:
-                return row[0]
+                return "#"+row[0]
 
     def printQuoteToChan(self, channel, qid):
         """Affiche la quote d'identifiant qid dans le salon channel,
@@ -285,4 +372,36 @@ class Quotes(PythagoreModuleMySQL):
             channel,
             "La citation n°\002%s\002 n'existe pas." % qid
             )
+    def printQuoteToNick(self, nick, qid):
+        """Affiche la quote n°qid en pv"""
+        if self.executeQuery("""SELECT content FROM `%s` WHERE qid=%%s AND deleted=FALSE""" % self.qtable, qid):
+            row = self.cur.fetchone()
+            if row:
+                self.bot.say(
+                    nick,
+                    "[\002%s\002] %s" % (qid, row[0])
+                    )
+                print "bouh0"
 
+
+    def isPublicChannel(self, channel):
+        "Vérifie que channel est public"
+        if isinstance(channel, str):
+            if channel[0] == '#':
+                channel = channel[1:]
+            query = """SELECT public_quotes from `%s` WHERE name=%%s"""
+        else:
+            query = """SELECT public_quotes from `%s` WHERE cid=%%s"""
+        if self.executeQuery(query % self.ctable, channel):
+            row = self.cur.fetchone()
+            if row:
+                return row[0]
+        return
+
+    def isDeleted(self, qid):
+        "Vérifie si la quote est 'deleted'"
+        if self.executeQuery("""SELECT deleted FROM `%s` WHERE qid=%%s""" % self.qtable, qid):
+            row = self.cur.fetchone()
+            if row:
+                return row[0]
+        return

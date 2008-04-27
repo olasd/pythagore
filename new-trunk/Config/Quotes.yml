@@ -4,3 +4,5 @@ admins:
     - Phane
     - pandore
     - EKiNoX
+qtable: quotes
+minWordsInQuotes: 3

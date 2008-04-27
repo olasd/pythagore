@@ -24,232 +24,213 @@
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
-# Structure de la table :
-# | qid | content | author | cid | timestamp | deleted |
 
-from PythagoreModuleMySQL import PythagoreModuleMySQL
+from PythagoreModule import PythagoreModule
+from Mapped import Quote, Channel
+
 import random
-from time import time
-import sys, MySQLdb
+import sqlalchemy as sa
+import sqlalchemy.orm as sao
 import datetime
 
-class Quotes(PythagoreModuleMySQL):
+class Quotes(PythagoreModule):
     def __init__(self, pythagore):
-        PythagoreModuleMySQL.__init__(self, pythagore)
+        PythagoreModule.__init__(self, pythagore)
         # export commands (keywords)
         self.exports['addquote'] = "addQuote"
         self.exports['delquote'] = "removeQuote"
         self.exports['lastquote'] = "lastQuote"
         self.exports['quoteinfo'] = "quoteInfo"
-        self.exports['quotestatus'] = "quoteStatus"
-        self.exports['quoteon'] = "enableChan"
-        self.exports['quoteoff'] = "disableChan"
         self.exports['quote'] = "getQuote"
         self.exports['randquote'] = "randomQuote"
         self.exports['findquote'] = "searchQuote"
-        self.qtable = self.mysqlConfig['tables']['Quotes']
-        self.ctable = self.mysqlConfig['tables']['Channels']
+        
+        self.qtable = sa.Table(self.config["qtable"], self.bot.metadata,
+            sa.Column('qid', sa.Integer, primary_key=True),
+            sa.Column('content', sa.Unicode(400)),
+            sa.Column('author', sa.String(60)),
+            sa.Column('cid', sa.Integer, sa.ForeignKey('%s.cid' % self.bot.conf["table_names"]["channels"])),
+            sa.Column('timestamp', sa.DateTime, default=datetime.datetime.now),
+            sa.Column('deleted', sa.Boolean, default=False))
+
+        sao.mapper(Quote, self.qtable)
+        
         try:
             self.config['minWordsInQuotes']
         except:
             self.config['minWordsInQuotes'] = 1
 
-    def searchQuoteByQID(self, id):
-        """Récupère une quote par son identifiant. 
-        La chaîne extra_clauses sert à restreindre la recherche dans le WHERE"""
-        # Query sur qtable
-        if self.executeQuery("""SELECT * from %s where qid=%%s""" % self.qtable, id):
-            line = self.cur.fetchone()
-            print line
-            if line and not line[5]:
-                return line
-        return 0
-
-    def verifyNick(self, nick, query_nick):
-        if nick == query_nick or nick in self.config['admins']:
-            return 1
-        return 0
-
     def addQuote(self, channel, nick, msg):
         """!addquote <quote>
-        Ajoute <quote> à la base de données"""
+        Adds <quote> to the database"""
         if msg:
             words=msg.split()
         else:
-            self.bot.error(channel, "Erreur ! Précisez la citation à ajouter")
+            self.bot.error(channel, _("Missing quote contents !"))
             return
         # s'il y a assez de mots dans la quote
         if len(words) >= int(self.config['minWordsInQuotes']):
-            # on cherche le cid du channel
-            cid = self.getCIDByName(channel)
-            if cid:
-                # pour remplir le rang de la quote
-                if self.executeQuery(
-                        """INSERT INTO `%(qtable)s` (content,author,cid) VALUES (%%s,%%s,%%s)"""
-                        % {'qtable': self.qtable},
-                        msg, nick, cid):
-                    self.dbConn.commit()
-                    # et on cherche le qid pour afficher une référence ds la confirmation
-                    if self.executeQuery("""SELECT qid FROM `%s` WHERE cid = %%s ORDER BY qid DESC LIMIT 1""" % self.qtable, cid):
-                        qid = self.cur.fetchone()[0]
-                        self.bot.say(channel, "Citation n°\002%s\002 ajoutée !" % qid)
+            newquote = Quote(nick, msg.decode(self.bot.channels[channel].encoding), self.bot.channels[channel].cid)
+            self.bot.session.save(newquote)
+            self.bot.session.commit()
+            if newquote.qid is not None:
+                self.bot.say(channel, _("Quote number \002%(qid)s\002 added !") % {'qid': newquote.qid})
         else:
-            self.bot.error(channel, "Citation trop courte.")
+            self.bot.error(channel, _("Quote too short !"))
 
     def removeQuote(self, channel, nick, msg):
-        """!delquote <id>
-        Supprime de la base de données la citation n° <id>."""
+        """!delquote <qid>
+        Removes quote number <qid> from the database if the user is allowed to"""
         if msg:
             words = msg.split()
             if len(words) == 1:
                 try:
                     id = int(words[0])
                 except ValueError:
-                    self.bot.error(channel, "L'identifiant doit être un chiffre.")
+                    self.bot.error(channel, _("Argument should be a number !"))
                     return
-                row = self.searchQuoteByQID(id)
-                if row:
-                    # on vérifie que nick a le droit de l'enlever
-                    if self.verifyNick(nick, row[2]):
-                        if self.executeQuery("""UPDATE `%s` SET deleted=TRUE WHERE qid=%%s""" % self.qtable, id):
-                            self.dbConn.commit()
-                            self.bot.say(channel, "Citation n°\002%s\002 effacée" % id)
-                    else:
-                        self.bot.say(channel, 
-                            "Vous n'avez pas le droit d'effacer cette citation !"
-                            )
+                try:
+                    quote = self.bot.session.query(Quote).filter(Quote.qid==id).one()
+                except sa.exceptions.InvalidRequestError:
+                    self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
                 else:
-                    self.bot.say(channel,
-                        "La citation n°\002%s\002 n'existe pas !" % id
-                        )
+                    #on vérifie que nick a le droit de l'enlever
+                    if nick.lower() == quote.author.lower() or nick in self.config["admins"]:
+                        quote.deleted = True
+                        self.bot.session.commit()
+                        self.bot.say(channel, _("Quote number \002%(qid)s\002 deleted") % {'qid': quote.qid})
+                    else:
+                        self.bot.say(channel, _("You're not allowed to delete this quote !"))
             else:
-                self.bot.error(channel, "Trop de paramètres.")
+                self.bot.error(channel, _("Too many parameters."))
         else:
-            self.bot.error(channel, "Pas assez de paramètres.")
+            self.bot.error(channel, _("Too few parameters."))
 
     def getQuote(self, channel, nick, msg):
-        """!quote <numéro> 
-        Afficher la citation n°<numéro>"""
+        """!quote <qid> 
+        Shows quote number <qid> in the current channel, if allowed"""
         if msg:
             words = msg.split()
             if len(words) == 1:
                 try:
                     qid = int(words[0])
                 except ValueError:
-                    self.bot.error(channel, "L'identifiant doit être un nombre.")
+                    self.bot.error(channel, _("Argument should be a number !"))
                     return
-                self.printQuoteToChan(channel, qid)
+                try:
+                    quote = self.bot.session.query(Quote).filter(Quote.deleted==False).filter(Quote.qid==qid).one()
+                except sa.exceptions.InvalidRequestError:
+                    self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': qid})
+                    return
+
+                self.printQuoteToChan(channel, quote)
             else:
-                self.bot.error(channel, "Trop de paramètres.")
+                self.bot.error(channel, _("Too many parameters."))
         else:
             self.randomQuote(channel, nick, msg)
 
     def randomQuote(self, channel, nick, msg):
-        """!randomquote [--all | --channel=#chan | -c=#salon]
-        Affiche une citation au hasard, uniquement dans celles de <channel>
-        si ce dernier est précisé."""
+        """!randomquote [--all | --channel=#chan | -c=#chan]
+        Shows a random quote from channel #chan, or from all channels, or by default from the current channel."""
       
         all = False
-        allrows = ()
         chan = channel
         if msg is not None:
             words = msg.split()
-            print words
             if words[0] == "--all":
                 all = True
             elif words[0].startswith("-c=") or words[0].startswith("--channel="):
                 chan = words[0].split("=", 1)[1]
             else:
-                self.bot.error(channel, "Arguments incorrects !")
+                self.bot.error(channel, _("Incorrect parameters !"))
                 return
         
-        # Si --all
         if all:
-            if self.executeQuery("""SELECT qid FROM `%(qtable)s` LEFT JOIN `%(ctable)s` 
-                    ON (`%(qtable)s`.cid = `%(ctable)s`.cid) 
-                    WHERE `%(ctable)s`.public_quotes = 1 AND `%(qtable)s`.deleted = FALSE"""
-                    % {'ctable': self.ctable, 'qtable' : self.qtable}
-                    ):
-                allrows = self.cur.fetchall()
+            try:
+                quotes = self.bot.session.query(Quote).join(self.bot.tables["channels"]).\
+                    filter(Quote.deleted == False).filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
+                                                                Quote.cid == self.bot.channels[channel].cid)).all()
+            except:
+                self.bot.say(channel, _("No quote found !"))
+                return
         else:
             if channel != chan and not self.isPublicChannel(chan):
-                self.bot.say(channel, "Pas de citation trouvée !")
+                self.bot.say(channel, _("No quote found !"))
                 return
-            
-            if self.executeQuery("""SELECT qid FROM `%s` WHERE cid=%%s AND deleted=FALSE""" % self.qtable, self.getCIDByName(chan)):
-                allrows = self.cur.fetchall()
+            quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[channel].cid).all()
         
-        if allrows:
-            self.printQuoteToChan(channel, allrows[random.randint(0,len(allrows)-1)][0])
+        if quotes:
+            self.printQuoteToChan(channel, quotes[random.randint(0,len(quotes)-1)])
         else:
-            self.bot.say(channel, "Pas de citation trouvée !")
+            self.bot.say(channel, _("No quote found !"))
 
     def searchQuote(self, channel, nick, msg):
-        """!findquote [-all | -channel=#salon | -c=#salon] <recherché> 
-        Permet de lancer une recherche parmis les quotes contenant le texte <recherché>"""
+        """!findquote [-all | -channel=#chan | -c=#chan] <query> 
+        Searches a quote containing <query> from channel #chan, or from all channels, or from the current channel."""
         all = False
-        allrows = ()
         chan = channel
         if msg is not None:
             words = msg.split()
-
             print words
             if words[0] == "--all":
-                del words[0]
                 all = True
-            elif words[0].startswith("-c=") or words[0].startswith("--channel="):
                 del words[0]
+            elif words[0].startswith("-c=") or words[0].startswith("--channel="):
                 chan = words[0].split("=", 1)[1]
-            elif len(words)<2 and words[0:1] == "--":
-                self.bot.error(channel, "Arguments incorrects !")
-                return
+                del words[0]
+            
             toSearch = "%"+"%".join(words)+"%"
         
-            # Si --all
             if all:
-                # FIXME ne prend pas en compte le chan privé courant
-                if self.executeQuery("""SELECT qid FROM `%(qtable)s` LEFT JOIN `%(ctable)s` 
-                        ON (`%(qtable)s`.cid = `%(ctable)s`.cid) 
-                        WHERE `%(ctable)s`.public_quotes = TRUE AND `%(qtable)s`.deleted = FALSE
-                        AND `%(qtable)s`.content LIKE %%s"""
-                        % {'ctable': self.ctable, 'qtable' : self.qtable},
-                        toSearch
-                        ):
-                    allrows = self.cur.fetchall()
-            # recherche dans chan particulier
+                try:
+                    quotes = self.bot.session.query(Quote).\
+                        join(self.bot.tables["channels"]).filter(Quote.deleted == False).\
+                                                            filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
+                                                                         Quote.cid == self.bot.channels[channel].cid)).\
+                                                            filter(Quote.content.like(toSearch)).all()
+                except:
+                    self.bot.say(channel, _("No quote found !"))
+                    return
+
             else:
                 if channel != chan and not self.isPublicChannel(chan):
-                    self.bot.say(channel, "Pas de citation trouvée !")
+                    self.bot.say(channel, _("No quote found !"))
+                    return
+                 
+                try:
+                    quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).\
+                                                            filter(Quote.cid == self.bot.channels[channel].cid).\
+                                                            filter(Quote.content.like(toSearch)).all()
+                except:
+                    self.bot.say(channel, _("No quote found !"))
                     return
             
-                if self.executeQuery("SELECT qid FROM `%s` WHERE cid=%%s AND deleted=FALSE AND content LIKE %%s" % self.qtable, self.getCIDByName(chan), toSearch):
-                    allrows = self.cur.fetchall()
-        
-            if allrows:
-                newrows = []
-                for i in range(0,len(allrows)):
-                    newrows.append(str(allrows[i][0]))
-                print ", ".join(newrows)
-                nbFound = len(newrows)
-                self.bot.say(channel, "%s citations trouvées :" % nbFound)
+            if quotes:
+                quotenums = [str(quote.qid) for quote in quotes]
+                print ", ".join(quotenums)
+                nbFound = len(quotes)
+                self.bot.say(channel, nbFound > 1 and _("%(num)s quotes found:") % {'num': nbFound}
+                                                  or  _("1 quote found:"))
                 i = 0
                 while i < 3 and i < nbFound:
-                    self.printQuoteToChan(channel, int(newrows[i]))
-                    i=i+1
+                    self.printQuoteToChan(channel, quotes[i])
+                    i+=1
                 while i < 5 and i < nbFound:
-                    self.printQuoteToNick(nick, int(newrows[i]))
-                    i=i+1
+                    self.printQuoteToNick(nick, quotes[i])
+                    i+=1
                 if i < nbFound:
-                    self.bot.say(nick, "%s autres citations trouvées : %s" % (nbFound-5,", ".join(newrows))) 
+                    self.bot.say(nick, nbFound-5 > 1 and _("%(num)s other quotes found: %(quotenums)s") % {'num': nbFound-5,
+                                                                                                           'quotenums': ", ".join(quotenums[5:])}
+                                                     or _("One other quote found: %(quotenum)s") % {'quotenum': quotenums[5]}) 
             else:
-                self.bot.say(channel, "Pas de citation trouvée !")
+                self.bot.say(channel, _("No quote found !"))
         else:
-            self.bot.error(channel, "Précisez votre recherche !")
+            self.bot.error(channel, _("Define your query !"))
 
     def lastQuote(self, channel, nick, msg):
         """!lastquote [-all]
-        Affiche la dernière citation enregistrée sur le salon actuel.
-        Si -all est ajouté c'est la dernière citation du réseau qui sera retournée."""
+        Shows the last quote recorded in the current channel.
+        If -all is added, the last quote from the network is printed out."""
         all = False
         row = ()
         if msg is not None:
@@ -257,151 +238,99 @@ class Quotes(PythagoreModuleMySQL):
             if words[0] == "--all":
                 all = True
             else:
-                self.bot.error(channel, "Arguments incorrects !")
+                self.bot.error(channel, _("Incorrect parameters !"))
                 return
         if all:
-            # FIXME ne prend pas en compte le chan privé courant
-            if self.executeQuery("""SELECT qid FROM `%(qtable)s` LEFT JOIN `%(ctable)s` 
-                    ON (`%(qtable)s`.cid = `%(ctable)s`.cid) 
-                    WHERE `%(ctable)s`.public_quotes = TRUE AND `%(qtable)s`.deleted = FALSE
-                    ORDER by qid desc LIMIT 1"""
-                    % {'ctable': self.ctable, 'qtable' : self.qtable}
-                    ):
-                row = self.cur.fetchone()
-        # recherche dans chan courant
+            try:
+                quote = self.bot.session.query(Quote).\
+                        join(self.bot.tables["channels"]).\
+                        filter(Quote.deleted == False).\
+                        filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
+                                    Quote.cid == self.bot.channels[channel].cid)).\
+                        filter(Quote.content.like(toSearch)).order_by(Quote.qid.desc()).first()
+            except sa.exceptions.InvalidRequestError:
+                self.bot.say(channel, _("No quote found !"))
+                return
+
+
         else:
-            if self.executeQuery("""SELECT qid FROM `%s` WHERE cid=%%s 
-                AND deleted=FALSE ORDER by qid desc LIMIT 1""" % self.qtable,
-                self.getCIDByName(channel)):
-                row = self.cur.fetchone()
-        if row:
-            self.printQuoteToChan(channel, row[0])
+            try:
+                quote = self.bot.session.query(Quote).\
+                        filter(Quote.deleted == False).\
+                        filter(Quote.cid == self.bot.channels[channel].cid).\
+                        order_by(Quote.qid.desc()).first()
+            except sa.exceptions.InvalidRequestError:
+                self.bot.say(channel, _("No quote found !"))
+                return
+
+        if quote:
+            self.printQuoteToChan(channel, quote)
         else:
-            self.bot.say(channel, "Pas de citation trouvée !")
+            self.bot.say(channel, _("No quote found !"))
 
     def quoteInfo(self, channel, nick, msg):
-        """!quoteinfo <numéro> 
-        Affiche l'auteur d'une citation ainsi que le salon et la date où la citation a été enregistrée"""
+        """!quoteinfo <qid> 
+        Shows information about quote number <qid>"""
         if msg:
             try:
                 id = int(msg)
             except ValueError:
-                self.bot.error(channel, "L'identifiant doit être un nombre.")
+                self.bot.error(channel, _("Argument should be a number !"))
                 return
-            query = "SELECT * from %(table)s WHERE qid=%(qid)s" % {'table':self.qtable,'qid': id}
-            if self.executeQuery(query):
-                row = self.cur.fetchone()
-                if row:
-                    t = row[4]
-                    timestamp = "%s/%s/%s à %s:%s:%s" % (t.day,t.month,t.year,t.hour,t.minute,t.second)
-                    self.bot.say(channel, "Citation n°%(qid)s ajoutée par %(author)s le %(date)s, sur %(chan)s" % {'qid':row[0],'author':row[2],'date':timestamp,'chan':self.getChanNameByCID(row[3])})
-                else:
-                    self.bot.say(channel, "Pas de citation trouvée")
-        else:
-            self.bot.error(channel, "Veuillez préciser le numéro de la citation")
+            try:
+                quote = self.bot.session.query(Quote).filter(Quote.qid==id).one()
+            except sa.exceptions.InvalidRequestError:
+                self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
+                return
 
-    def enableChan(self, channel, nick, msg):
-        """!quoteon 
-        Permet d'activer le gestionnaire de citations, seul un opérateur du canal (@) peut l'utiliser"""
-        # FIXME isOp ?
-        if 1:
-            if self.executeQuery("UPDATE `%s` SET enabled = TRUE" % self.ctable):
-                self.dbConn.commit()
-                self.bot.say(channel, "Le système de quotes a été activé")
-                
-        
-    def disableChan(self, channel, nick, msg):
-        """!quoteoff 
-        Permet de désactiver le gestionnaire de citations, seul un opérateur du canal (@) peut l'utiliser"""
-        # FIXME isOp ?
-        if 1:
-            if self.executeQuery("UPDATE `%s` SET enabled = FALSE" % self.ctable):
-                self.dbConn.commit()
-                self.bot.say(channel, "Le système de quotes a été désactivé")
-
-    def quoteStatus(self, channel, nick, msg):
-        """!quotestatus 
-        Indique si le gestionnaire de citations est actif ou non"""
-        if self.executeQuery("""SELECT enabled from %(table)s 
-            WHERE cid=%(cid)s""" % {'table':self.ctable, 'cid':self.getCIDByName(channel)}
-            ):
-            enabled = self.cur.fetchone()[0]
-            if enabled:
-                self.bot.say(channel, "Le système de quotes est activé")
-            else:
-                self.bot.say(channel, "Le système de quotes est désactivé")
-
-    def getCIDByName(self, channel_name):
-        """Récupère l'identifiant du salon dans la table channels par son nom"""
-        
-        if channel_name[0] == '#':
-            cname = channel_name[1:]
-        else:
-            cname = channel_name
-
-        if self.executeQuery("""SELECT cid FROM `%s` WHERE name=%%s""" % self.ctable, cname):
-            row = self.cur.fetchone()
-            if row:
-                return int(row[0])
-        return
-
-    def getChanNameByCID(self, id):
-        "Renvoie le nom du chan de cid <id>"
- 
-        if self.executeQuery("""SELECT name FROM `%s` WHERE cid=%%s""" % self.ctable, id):
-            row = self.cur.fetchone()
-            if row:
-                return "#"+row[0]
-
-    def printQuoteToChan(self, channel, qid):
-        """Affiche la quote d'identifiant qid dans le salon channel,
-        si elle existe et s'il est autorisé à l'afficher."""
-        
-        if self.executeQuery("""SELECT cid,content FROM `%s` WHERE qid=%%s AND deleted=FALSE""" % self.qtable, qid):
-            row = self.cur.fetchone()
-            if row:
-                print self.getCIDByName(channel), row[0]
-                if self.getCIDByName(channel) == int(row[0]) or self.isPublicChannel(row[0]):
-                    self.bot.say(
-                        channel,
-                        "[\002%s\002] %s" % (qid, row[1])
-                        )
+            if quote:
+                try:
+                    quote_chan = self.bot.session.query(Channel).\
+                                    filter(Channel.cid==quote.cid).\
+                                    filter(sa.or_(Channel.publicquotes==True,
+                                                  Channel.cid==self.bot.channels[channel].cid)).one()
+                except sa.exceptions.InvalidRequestError:
+                    self.bot.say(channel, _("No quote found !"))
                     return
-        
-        self.bot.say(
-            channel,
-            "La citation n°\002%s\002 n'existe pas." % qid
-            )
-    def printQuoteToNick(self, nick, qid):
-        """Affiche la quote n°qid en pv"""
-        if self.executeQuery("""SELECT content FROM `%s` WHERE qid=%%s AND deleted=FALSE""" % self.qtable, qid):
-            row = self.cur.fetchone()
-            if row:
-                self.bot.say(
-                    nick,
-                    "[\002%s\002] %s" % (qid, row[0])
-                    )
-                print "bouh0"
+                timestamp = quote.timestamp.strftime(str(_("the %y/%m/%d at %H:%M:%S")))
+                self.bot.say(channel, _("Quote number \002%(qid)s\002 added by %(author)s on %(date)s, on %(chan)s") %
+                        {'qid': quote.qid,'author': quote.author, 'date': timestamp, 'chan': quote_chan.name})
+            else:
+                self.bot.say(channel, _("No quote found !"))
+        else:
+            self.bot.error(channel, _("Too few parameters."))
 
+    def printQuoteToChan(self, channel, quote):
+        """Shows 'quote' object in the channel, if it exists and the channel is allowed to print the quote"""
+        
+        if quote:
+            if self.bot.channels[channel].cid == quote.cid or self.isPublicChannel(quote.cid):
+                self.bot.say(
+                    channel,
+                    _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content}
+                    )
+            else:
+                self.bot.say(channel, _("No quote found !"))
+    
+    def printQuoteToNick(self, nick, quote):
+        """Prints quote as a private message"""
+        if row:
+            self.bot.msg(
+                nick,
+                _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content}
+                )
 
     def isPublicChannel(self, channel):
-        "Vérifie que channel est public"
-        if isinstance(channel, str):
-            if channel[0] == '#':
-                channel = channel[1:]
-            query = """SELECT public_quotes from `%s` WHERE name=%%s"""
+        """Checks if 'channel' is a public channel"""
+        if isinstance(channel, basestring):
+            try:
+                chan = self.bot.channels[channel]
+            except KeyError:
+                return False
         else:
-            query = """SELECT public_quotes from `%s` WHERE cid=%%s"""
-        if self.executeQuery(query % self.ctable, channel):
-            row = self.cur.fetchone()
-            if row:
-                return row[0]
-        return
+            try:
+                chan = self.bot.session.query(Channel).filter(Channel.cid==channel).one()
+            except sa.exceptions.InvalidRequestError:
+                return False
+        return chan.publicquotes
 
-    def isDeleted(self, qid):
-        "Vérifie si la quote est 'deleted'"
-        if self.executeQuery("""SELECT deleted FROM `%s` WHERE qid=%%s""" % self.qtable, qid):
-            row = self.cur.fetchone()
-            if row:
-                return row[0]
-        return

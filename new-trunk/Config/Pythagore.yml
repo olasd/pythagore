@@ -1,4 +1,4 @@
-host: irc.teepi.net
+host: localhost
 port: 6667
 nick: Pyth
 logdir: teepi
@@ -9,3 +9,8 @@ channels:
     - pytest3
 encodings:
     "pcinpact-linux": "UTF-8"
+db_uri: mysql://pythagore:toto1234@localhost/pythagore
+table_names:
+    channels: channels
+    modules: modules
+    enabled_modules: enabled_modules

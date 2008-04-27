@@ -1,8 +1,0 @@
-db: pythagore
-user: pythagore
-passwd:
-host:
-port:
-tables:
-    "Quotes": "quotes"
-    "Channels": "channels"

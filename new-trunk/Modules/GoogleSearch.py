@@ -51,7 +51,7 @@ class GoogleSearch(PythagoreModule):
         if msg is None:
             self.bot.error(
                     channel,
-                    "!google nécessite une requête.",
+                    _("Too few parameters."),
                     )
             return
 
@@ -59,12 +59,12 @@ class GoogleSearch(PythagoreModule):
         if len(result) == 0:
             self.bot.say(
                     channel,
-                    "Pas de résultats pour la requête [%s]" % msg
+                    _("No results for query [%(query)s]") % {'query': msg}
                     )
         else:
             self.bot.say(
                     channel,
-                    "Résultats Google pour [%s]:" % msg
+                    _("Google results for [%(query)s]:") % {'query': msg}
                     )
             for i in range(min(3,len(result))):
                 resultat = "[" + str(i+1) + "] %s (%s)" % (unquote(result[i]['url']), unquote(result[i]['titleNoFormatting']))

@@ -35,6 +35,7 @@ class PythagoreModule:
         self.exports = {}
         self.bot = pythagore
         self.loadConfig()
+        self.name = self.__class__.__name__
 
     def loadConfig(self):
         """Configuration initialization. Override this if you do not want 
@@ -69,3 +70,32 @@ class PythagoreModule:
             os.rename("Config" + os.sep + name + ".new.yml","Config" + os.sep + name + ".yml")
         except:
             return
+
+class PythagoreModuleContainer:
+    """This is the class that contains all Pythagore's modules. It emulates
+    a dict so that an access to it returns a callback"""
+    
+    def __init__(self):
+        self.modules = {}
+        self.moduleinstances = {}
+
+    def register(self, modname):
+        """This registers a module"""
+        if modname in self.modules:
+            self.modules[modname] = reload(self.modules[modname])
+            self.unregisterModule(modname)
+        else:
+            self.modules[modname] = __import__("Modules/%s" % modname)
+        
+        self.moduleinstances[modname] = getattr(
+            self.modules[modname],
+            modname,
+        )(self);
+        
+        for i in self.moduleinstances[modname].exports:
+            self.keywords[i] = getattr(
+                    self.moduleinstances[modname],
+                    self.moduleinstances[modname].exports[i]
+                    )
+
+

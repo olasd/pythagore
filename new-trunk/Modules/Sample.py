@@ -24,8 +24,6 @@
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 from PythagoreModule import PythagoreModule
-# from PythagoreModuleMySQL import PythagoreModuleMySQL
-import sys
 
 class Filename(PythagoreModule):
     def __init__(self, pythagore):

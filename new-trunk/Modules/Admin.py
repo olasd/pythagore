@@ -6,7 +6,7 @@
 #
 # Admin.py : Administration module for Pythagore bot
 #
-# Copyright (C) 2007 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright (C) 2007, 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -23,9 +23,13 @@
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+import sys, time
+
 from PythagoreModule import PythagoreModule
 from twisted.internet import reactor
-import sys
+import sqlalchemy as sa
+
+from Mapped import Channel,Module
 
 class Admin(PythagoreModule):
     def __init__(self, pythagore):
@@ -33,6 +37,9 @@ class Admin(PythagoreModule):
         self.exports['loadmodule'] = "loadModule"
         self.exports['unloadmodule'] = "unloadModule"
         self.exports['die'] = "die"
+        self.exports['addchannel'] = "addChannel"
+        self.exports['enable'] = "enableModule"
+        self.exports['disable'] = "disableModule"
 
     def loadModule(self, channel, nick, msg):
         if nick in self.config["admins"]:
@@ -45,4 +52,63 @@ class Admin(PythagoreModule):
     def die(self, channel, nick, msg):
         if nick in self.config["admins"]:
             reactor.stop()
+    
+    def addChannel(self, channel, nick, msg):
+        """Adds the channel to the bot database. The channel's encoding is given by a second argument."""
+        if nick in self.config["admins"]:
+            args = msg.split()
+           
+            # We create a new channel whose name is the first argument
+            newchannel = Channel(args[0])
+            try:
+                newchannel.encoding = args[1]
+            except IndexError:
+                # No encoding was given, we keep the default.
+                pass
 
+            # We enable all modules for this new channel
+            newchannel.modules = self.bot.session.query(Module).all()
+
+            self.bot.session.save(newchannel)
+            self.bot.session.commit()
+            
+            # Now we're all set, we can join this channel after appending it to the bot's channel list
+            self.bot.channels[newchannel.name] = newchannel
+            print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time() ,'channel': newchannel.name}
+            self.bot.join(newchannel.name)
+
+    def enableModule(self, channel, nick, msg):
+        """Enables the given module in the channel."""
+        if self.bot.isOp(channel, nick):
+            try:
+                modulename = msg.split()[0]
+            except AttributeError:
+                self.bot.error(channel, _("Too few parameters."))
+            else:
+                try:
+                    module = self.bot.session.query(Module).filter(Module.name==modulename).one()
+                except sa.exceptions.InvalidRequestError:
+                    self.bot.error(channel, _("No such module %(module)s") % {'module': modulename})
+                else:
+                    if module not in self.bot.channels[channel].modules:
+                        self.bot.say(channel, _("Enabling module %(module)s") % {'module': modulename})
+                        self.bot.channels[channel].modules.append(module)
+                        self.bot.session.commit()
+
+    def disableModule(self, channel, nick, msg):
+        """Disables the given module in the channel."""
+        if self.bot.isOp(channel, nick):
+            try:
+                modulename = msg.split()[0]
+            except AttributeError:
+                self.bot.error(channel, _("Too few parameters."))
+            else:
+                try:
+                    module = self.bot.session.query(Module).filter(Module.name==modulename).one()
+                except sa.exceptions.InvalidRequestError:
+                    self.bot.error(channel, _("No such module %(module)s") % {'module': modulename})
+                else:
+                    if module in self.bot.channels[channel].modules:
+                        self.bot.say(channel, _("Disabling module %(module)s") % {'module': modulename})
+                        self.bot.channels[channel].modules.remove(module)
+                        self.bot.session.commit()

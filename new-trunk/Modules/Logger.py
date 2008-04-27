@@ -6,7 +6,7 @@
 #
 # Logger.py : Logger Classes
 #
-# Copyright (C) 2007 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright (C) 2007, 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -59,8 +59,8 @@ class ChannelLogger:
         if current_time >= self.rollat:
             self.roll()
         t = time.localtime(int(current_time))
-        timestamp = time.strftime("[%H:%M:%S]", time.localtime(time.time()))
-        self.file.write("%s %s\n" % (timestamp, message))
+        timestamp = time.strftime(_("[%H:%M:%S]"), time.localtime(time.time()))
+        self.file.write(_("%(timestamp)s %(message)s\n") % {'timestamp': timestamp, 'message': message})
         self.file.flush()
 
     def close(self):
@@ -73,27 +73,27 @@ class Logger(PythagoreModule):
     """
     def __init__(self, pythagore):
         PythagoreModule.__init__(self, pythagore)
-        self.conf = pythagore.factory.conf
-        self.chan = {}
+        self.conf = pythagore.conf
+        self.chans = {}
 
     def __getitem__(self, key):
-        if key not in self.chan:
+        if key not in self.chans:
             return None
-        return self.chan[key]
+        return self.chans[key]
 
     def log(self, chan, message):
         """Write a message to the file."""
-        if chan not in self.chan.keys():
-            self.chan[chan] = ChannelLogger(
+        if chan not in self.chans:
+            self.chans[chan] = ChannelLogger(
                 self.conf, chan
             )
-        self.chan[chan].log(message)
+        self[chan].log(message)
 
     def logall(self, message):
-        for chan in self.chan:
+        for chan in self.chans:
             self[chan].log(message)
 
     def close(self):
-        for chan in self.chan:
+        for chan in self.chans:
             self[chan].close()
 

@@ -6,7 +6,7 @@
 #
 # Uptime.py : Simple Uptime module for Pythagore bot
 #
-# Copyright (C) 2007 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright (C) 2007, 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -34,6 +34,6 @@ class Uptime(PythagoreModule):
     def uptime(self, channel, nick, msg):
         self.bot.say(
             channel,
-            "Je suis sur teepi depuis %s secondes !" % (time() - self.bot.conn_t)
+            _("I've been on %(networkname)s for %(numseconds)s seconds !") % {'networkname': 'teepi', 'numseconds': (time() - self.bot.conn_t)}
         )
 

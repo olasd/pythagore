@@ -1,0 +1,172 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2008-04-27 13:17+CEST\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: ENCODING\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: ../Modules/Admin.py:77 ../Pythagore.py:264
+msgid "[%(timestamp)s] joining %(channel)s"
+msgstr ""
+
+#: ../Modules/Admin.py:86 ../Modules/Admin.py:104
+#: ../Modules/GoogleSearch.py:54 ../Modules/Quotes.py:107
+#: ../Modules/Quotes.py:301
+msgid "Too few parameters."
+msgstr ""
+
+#: ../Modules/Admin.py:91 ../Modules/Admin.py:109
+msgid "No such module %(module)s"
+msgstr ""
+
+#: ../Modules/Admin.py:94
+msgid "Enabling module %(module)s"
+msgstr ""
+
+#: ../Modules/Admin.py:112
+msgid "Disabling module %(module)s"
+msgstr ""
+
+#: ../Modules/GoogleSearch.py:62
+msgid "No results for query [%(query)s]"
+msgstr ""
+
+#: ../Modules/GoogleSearch.py:67
+msgid "Google results for [%(query)s]:"
+msgstr ""
+
+#: ../Modules/Logger.py:62
+msgid "[%H:%M:%S]"
+msgstr ""
+
+#: ../Modules/Logger.py:63
+msgid ""
+"%(timestamp)s %(message)s\n"
+msgstr ""
+
+#: ../Modules/Quotes.py:69
+msgid "Missing quote contents !"
+msgstr ""
+
+#: ../Modules/Quotes.py:77
+msgid "Quote number \002%(qid)s\002 added !"
+msgstr ""
+
+#: ../Modules/Quotes.py:79
+msgid "Quote too short !"
+msgstr ""
+
+#: ../Modules/Quotes.py:90 ../Modules/Quotes.py:118 ../Modules/Quotes.py:278
+msgid "Argument should be a number !"
+msgstr ""
+
+#: ../Modules/Quotes.py:95 ../Modules/Quotes.py:123 ../Modules/Quotes.py:283
+msgid "Quote number \002%(qid)s\002 doesn't exist !"
+msgstr ""
+
+#: ../Modules/Quotes.py:101
+msgid "Quote number \002%(qid)s\002 deleted"
+msgstr ""
+
+#: ../Modules/Quotes.py:103
+msgid "You're not allowed to delete this quote !"
+msgstr ""
+
+#: ../Modules/Quotes.py:105 ../Modules/Quotes.py:128
+msgid "Too many parameters."
+msgstr ""
+
+#: ../Modules/Quotes.py:145 ../Modules/Quotes.py:241
+msgid "Incorrect parameters !"
+msgstr ""
+
+#: ../Modules/Quotes.py:154 ../Modules/Quotes.py:158 ../Modules/Quotes.py:165
+#: ../Modules/Quotes.py:192 ../Modules/Quotes.py:197 ../Modules/Quotes.py:205
+#: ../Modules/Quotes.py:226 ../Modules/Quotes.py:252 ../Modules/Quotes.py:263
+#: ../Modules/Quotes.py:269 ../Modules/Quotes.py:293 ../Modules/Quotes.py:299
+#: ../Modules/Quotes.py:313
+msgid "No quote found !"
+msgstr ""
+
+#: ../Modules/Quotes.py:212
+msgid "%(num)s quotes found:"
+msgstr ""
+
+#: ../Modules/Quotes.py:213
+msgid "1 quote found:"
+msgstr ""
+
+#: ../Modules/Quotes.py:222
+msgid "%(num)s other quotes found: %(quotenums)s"
+msgstr ""
+
+#: ../Modules/Quotes.py:224
+msgid "One other quote found: %(quotenum)s"
+msgstr ""
+
+#: ../Modules/Quotes.py:228
+msgid "Define your query !"
+msgstr ""
+
+#: ../Modules/Quotes.py:295
+msgid "the %y/%m/%d at %H:%M:%S"
+msgstr ""
+
+#: ../Modules/Quotes.py:296
+msgid "Quote number \002%(qid)s\002 added by %(author)s on %(date)s, on %(chan)s"
+msgstr ""
+
+#: ../Modules/Quotes.py:310 ../Modules/Quotes.py:320
+msgid "[\002%(qid)s\002] %(contents)s"
+msgstr ""
+
+#: ../Modules/Uptime.py:37
+msgid "I've been on %(networkname)s for %(numseconds)s seconds !"
+msgstr ""
+
+#: ../Pythagore.py:111
+msgid "[disconnected at %s]"
+msgstr ""
+
+#: ../Pythagore.py:176
+msgid "-!- %(user)s has joined %(channel)s"
+msgstr ""
+
+#: ../Pythagore.py:193
+msgid "-!- %(user)s has quit (%(quitMessage)s)"
+msgstr ""
+
+#: ../Pythagore.py:242
+msgid "Error !"
+msgstr ""
+
+#: ../Pythagore.py:246
+msgid " See \002%(url)s\002 for more information."
+msgstr ""
+
+#: ../Pythagore.py:269
+msgid "[I have joined %(channel)s]"
+msgstr ""
+
+#: ../Pythagore.py:275
+msgid "(%(user)s) %(msg)s"
+msgstr ""
+
+#: ../Pythagore.py:284
+msgid "* %(user)s %(action)s"
+msgstr ""
+
+#: ../Pythagore.py:351
+msgid "connection failed: "
+msgstr ""
+

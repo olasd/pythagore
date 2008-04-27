@@ -40,7 +40,7 @@ import sqlalchemy.orm as sao
 
 # Gettext import
 import gettext
-gettext.install('Pythagore', './locale', unicode=True)
+gettext.install('pythagore', './locale', unicode=True)
 
 # yaml import
 import yaml

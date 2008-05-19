@@ -171,7 +171,6 @@ class Quotes(PythagoreModule):
         chan = channel
         if msg is not None:
             words = msg.split()
-            print words
             if words[0] == "--all":
                 all = True
                 del words[0]
@@ -249,7 +248,7 @@ class Quotes(PythagoreModule):
                         filter(Quote.deleted == False).\
                         filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
                                     Quote.cid == self.bot.channels[channel].cid)).\
-                        filter(Quote.content.like(toSearch)).order_by(Quote.qid.desc()).first()
+                        order_by(Quote.qid.desc()).first()
             except sa.exceptions.InvalidRequestError:
                 self.bot.say(channel, _("No quote found !"))
                 return
@@ -280,7 +279,7 @@ class Quotes(PythagoreModule):
                 self.bot.error(channel, _("Argument should be a number !"))
                 return
             try:
-                quote = self.bot.session.query(Quote).filter(Quote.qid==id).one()
+                quote = self.bot.session.query(Quote).filter(Quote.deleted==False).filter(Quote.qid==id).one()
             except sa.exceptions.InvalidRequestError:
                 self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
                 return
@@ -292,7 +291,7 @@ class Quotes(PythagoreModule):
                                     filter(sa.or_(Channel.publicquotes==True,
                                                   Channel.cid==self.bot.channels[channel].cid)).one()
                 except sa.exceptions.InvalidRequestError:
-                    self.bot.say(channel, _("No quote found !"))
+                    self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
                     return
                 # strftime wants a bytesting, not an unicode object. Let's satisfy him.
                 timestamp = unicode(quote.timestamp.strftime(_("the %y/%m/%d at %H:%M:%S").encode('UTF-8')), 'UTF-8')

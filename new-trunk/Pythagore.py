@@ -270,7 +270,8 @@ class PythagoreBot(irc.IRCClient):
         # The message may be one of the bot's commands
         if msg.startswith('!'):
             m = self.message_rex.match(msg)
-            self.words_callback(m.group('command'), channel, user, m.group('args'))
+            if m:
+                self.words_callback(m.group('command'), channel, user, m.group('args'))
 
     def action(self, user, channel, msg):
         """This will get called when the bot sees someone do an action."""

@@ -48,6 +48,8 @@ import yaml
 # Mapped objects
 from Mapped import Channel, Module
 
+from Shared import *
+
 class PythagoreBot(irc.IRCClient):
     """A Pythagore IRC bot."""
     
@@ -125,6 +127,17 @@ class PythagoreBot(irc.IRCClient):
                 # else we assume (hope ?) it is ISO8859-15
                 return txt.decode("ISO8859-15").encode(enc)
 
+    def to_unicode_with_channel_enc(self, txt, channel):
+        """Tries to decode the string txt into an unicode object, trying channel encoding"""
+        try:
+            enc = self.channels[channel].encoding
+        except KeyError:
+            enc = "ISO8859-15"
+
+        return to_unicode(txt, enc)
+
+    u_ = to_unicode_with_channel_enc
+
     # The following methods handle the user modes dictionnary
 
     def irc_RPL_NAMREPLY(self, prefix, params):
@@ -173,7 +186,7 @@ class PythagoreBot(irc.IRCClient):
         """This gets called when a user joins a channel"""
         # The user has no mode
         self.channels[channel].usermodes[user] = ''
-        self.logger.log(channel, _("-!- %(user)s has joined %(channel)s") % {'user': user, 'channel': channel})
+        self.logger.log(channel, _("-!- %(user)s has joined %(channel)s") % {'user': user, 'channel': self.u_(channel, channel)})
     
     def userLeft(self, user, channel):
         """This gets called when a user leaves a channel"""
@@ -190,7 +203,7 @@ class PythagoreBot(irc.IRCClient):
                 # The user was not in this channel.
                 pass
             else:
-                self.logger.log(channel, _("-!- %(user)s has quit (%(quitMessage)s)") % {'user': user, 'quitMessage': quitMessage})
+                self.logger.log(channel, _("-!- %(user)s has quit (%(quitMessage)s)") % {'user': user, 'quitMessage': e_(quitMessage)})
 
     def userRenamed(self, oldname, newname):
         """This gets called when a user changes name"""
@@ -252,7 +265,7 @@ class PythagoreBot(irc.IRCClient):
         self.session.refresh(self.channels[channel])
         if word in self.keywords and self.keywords[word][1] in self.channels[channel].modules:
             if msg:
-                msg = self.to_encoding(msg, enc="UTF-8")
+                msg = self.u_(msg, channel)
             method = self.keywords[word][0]
             method(channel, nick, msg)
             return True
@@ -261,18 +274,19 @@ class PythagoreBot(irc.IRCClient):
     def signedOn(self):
         """Called when bot has succesfully signed on to server."""
         for channel in self.channels:
-            print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time(),'channel': channel}
+            print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time(),'channel': self.u_(channel, channel)}
             self.join(channel)
 
     def joined(self, channel):
         """This will get called when the bot joins the channel."""
-        self.logger.log(channel, _("[I have joined %(channel)s]") % {'channel': channel})
+        self.logger.log(channel, _("[I have joined %(channel)s]") % {'channel': self.u_(channel, channel)})
 
     def privmsg(self, user, channel, msg):
         """This will get called when the bot receives a message."""
         # 'user' has the form 'nickname!username@host'
         user = user.split('!', 1)[0]
-        self.logger.log(channel, _("(%(user)s) %(msg)s") % {'user': user, 'msg': msg})
+        str = _("(%(user)s) %(msg)s") % {'user': e_(user), 'msg': self.u_(msg, channel)}
+        self.logger.log(channel, str)
         # The message may be one of the bot's commands
         if msg.startswith('!'):
             m = self.message_rex.match(msg)
@@ -281,7 +295,7 @@ class PythagoreBot(irc.IRCClient):
     def action(self, user, channel, msg):
         """This will get called when the bot sees someone do an action."""
         user = user.split('!', 1)[0]
-        self.logger.log(channel, _("* %(user)s %(action)s") % {'user': user, 'action': msg})
+        self.logger.log(channel, _("* %(user)s %(action)s") % {'user': user, 'action': self.u_(msg, channel)})
 
     def registerModule(self, modname):
         """This registers a module. When it is already loaded, the module is first unloaded

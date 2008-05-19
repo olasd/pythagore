@@ -70,7 +70,7 @@ class Quotes(PythagoreModule):
             return
         # s'il y a assez de mots dans la quote
         if len(words) >= int(self.config['minWordsInQuotes']):
-            newquote = Quote(nick, msg.decode(self.bot.channels[channel].encoding), self.bot.channels[channel].cid)
+            newquote = Quote(nick, self.bot.u_(msg, channel).encode('UTF-8'), self.bot.channels[channel].cid)
             self.bot.session.save(newquote)
             self.bot.session.commit()
             if newquote.qid is not None:
@@ -179,7 +179,9 @@ class Quotes(PythagoreModule):
                 chan = words[0].split("=", 1)[1]
                 del words[0]
             
-            toSearch = "%"+"%".join(words)+"%"
+            toSearch = self.bot.u_("%"+"%".join(words)+"%", channel).encode('UTF-8')
+
+            print repr(toSearch)
         
             if all:
                 try:
@@ -292,7 +294,8 @@ class Quotes(PythagoreModule):
                 except sa.exceptions.InvalidRequestError:
                     self.bot.say(channel, _("No quote found !"))
                     return
-                timestamp = quote.timestamp.strftime(str(_("the %y/%m/%d at %H:%M:%S")))
+                # strftime wants a bytesting, not an unicode object. Let's satisfy him.
+                timestamp = unicode(quote.timestamp.strftime(_("the %y/%m/%d at %H:%M:%S").encode('UTF-8')), 'UTF-8')
                 self.bot.say(channel, _("Quote number \002%(qid)s\002 added by %(author)s on %(date)s, on %(chan)s") %
                         {'qid': quote.qid,'author': quote.author, 'date': timestamp, 'chan': quote_chan.name})
             else:
@@ -307,7 +310,7 @@ class Quotes(PythagoreModule):
             if self.bot.channels[channel].cid == quote.cid or self.isPublicChannel(quote.cid):
                 self.bot.say(
                     channel,
-                    _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content}
+                    _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content.encode(self.bot.channels[channel].encoding)}
                     )
             else:
                 self.bot.say(channel, _("No quote found !"))

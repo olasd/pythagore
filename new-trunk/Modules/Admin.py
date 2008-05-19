@@ -59,7 +59,7 @@ class Admin(PythagoreModule):
             args = msg.split()
            
             # We create a new channel whose name is the first argument
-            newchannel = Channel(args[0])
+            newchannel = Channel(args[0].encode('UTF-8'))
             try:
                 newchannel.encoding = args[1]
             except IndexError:

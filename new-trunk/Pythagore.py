@@ -53,7 +53,7 @@ from Shared import *
 class PythagoreBot(irc.IRCClient):
     """A Pythagore IRC bot."""
     
-    def __init__(self):
+    def __init__(self, factory):
         # configuration, loaded at every connection
         configfile = file("Config" + os.sep + "Pythagore" + ".yml", 'r')
         self.conf = yaml.safe_load(configfile)
@@ -62,42 +62,22 @@ class PythagoreBot(irc.IRCClient):
         self.nickname = self.conf["nick"]
         self.tables = {}
 
-        self.SQLInit()
+        self.factory = factory
+        self.SQLInit ()
 
         self.modules = {}
-        self.channels = dict([(channel.name,channel) for channel in self.session.query(Channel).all()])
+        self.channels = dict([(channel.name,channel) for channel in self.session.query(Channel).all() if channel.enabled])
         self.moduleinstances = {}
         self.keywords = {}
         self.prefixes = {}
         self.message_rex = re.compile(r"^!(?P<command>[a-zA-Z]+)([ \t]+(?P<args>.*))?$")
 
     def SQLInit(self):
-        """This initializes the class mapping and connexion to the database"""
-        
-        self.engine = sa.create_engine(self.conf["db_uri"], echo=True)
-        self.metadata = sa.MetaData()
-        self.metadata.bind = self.engine
-
-        Session = sao.sessionmaker(bind=self.engine, autoflush=True, transactional=True)
-        self.session = Session()
-        
-        self.tables["channels"] = sa.Table(self.conf["table_names"]["channels"], self.metadata, 
-            sa.Column('cid', sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(60)),
-            sa.Column('encoding', sa.String(60)),
-            sa.Column('publicquotes', sa.Boolean))
-        
-        self.tables["modules"]  = sa.Table(self.conf["table_names"]["modules"], self.metadata,
-            sa.Column('mid', sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(60)))
-
-        self.tables["enabled_modules"] = sa.Table(self.conf["table_names"]["enabled_modules"], self.metadata,
-            sa.Column('mid', sa.Integer, sa.ForeignKey('%s.mid' % self.conf["table_names"]["modules"])),
-            sa.Column('cid', sa.Integer, sa.ForeignKey('%s.cid' % self.conf["table_names"]["channels"])))
-
-        sao.mapper(Module, self.tables["modules"])
-        sao.mapper(Channel, self.tables["channels"], properties={
-            'modules': sao.relation(Module, secondary=self.tables["enabled_modules"])})
+        """This function sets up the convenience pointers to SQL objects from the factory"""
+        self.engine = self.factory.engine
+        self.metadata = self.factory.metadata
+        self.tables = self.factory.tables
+        self.session = self.factory.session
 
     def connectionMade(self):
         """This function gets called whenever the bot gets connected to the network"""
@@ -354,8 +334,44 @@ class PythagoreBotConnector(protocol.ClientFactory):
     # the class of the protocol to build when new connection is made
     protocol = PythagoreBot
 
-    def __init__(self):
-        pass
+    def __init__(self, conf):
+        self.tables = {}
+        self.conf = conf
+        self.SQLInit()
+
+    def SQLInit(self):
+        """This initializes the class mapping and connection to the database"""
+        
+        self.engine = sa.create_engine(self.conf["db_uri"], echo=False)
+        self.metadata = sa.MetaData()
+        self.metadata.bind = self.engine
+
+        Session = sao.sessionmaker(bind=self.engine, autoflush=True, transactional=True)
+        self.session = Session()
+        self.tables["channels"] = sa.Table(self.conf["table_names"]["channels"], self.metadata, 
+            sa.Column('cid', sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(60)),
+            sa.Column('encoding', sa.String(60)),
+            sa.Column('enabled', sa.Boolean),
+            sa.Column('publicquotes', sa.Boolean))
+        
+        self.tables["modules"]  = sa.Table(self.conf["table_names"]["modules"], self.metadata,
+            sa.Column('mid', sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(60)))
+
+        self.tables["enabled_modules"] = sa.Table(self.conf["table_names"]["enabled_modules"], self.metadata,
+            sa.Column('mid', sa.Integer, sa.ForeignKey('%s.mid' % self.conf["table_names"]["modules"])),
+            sa.Column('cid', sa.Integer, sa.ForeignKey('%s.cid' % self.conf["table_names"]["channels"])))
+
+        sao.mapper(Module, self.tables["modules"])
+        sao.mapper(Channel, self.tables["channels"], properties={
+            'modules': sao.relation(Module, secondary=self.tables["enabled_modules"])})
+        
+        self.metadata.create_all()
+
+
+    def buildProtocol(self, addr):
+        return PythagoreBot (self)
 
     def clientConnectionLost(self, connector, reason):
         """If we got disconnected, reconnect to server."""
@@ -373,7 +389,7 @@ def main():
     
 
     # Connection 
-    connector = PythagoreBotConnector()
+    connector = PythagoreBotConnector(conf)
     reactor.connectTCP(conf["host"], conf["port"], connector)
     reactor.run()
 

@@ -26,12 +26,13 @@
 class Channel(object):
     """An object representing a channel, to be mapped via SQLAlchemy"""
     
-    def __init__(self, name, modules=[], encoding="ISO8859-15", public=True):
+    def __init__(self, name, modules=[], encoding="ISO8859-15", public=True, enabled=True):
         self.name = name
         self.enabledmodules = modules
         self.encoding = encoding
         self.publicquotes = public 
         self.usermodes = {}
+        self.enabled = enabled
 
 class Module(object):
     """An object representing a module, to be mapped via SQLAlchemy"""

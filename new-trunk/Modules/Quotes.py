@@ -32,6 +32,7 @@ import random
 import sqlalchemy as sa
 import sqlalchemy.orm as sao
 import datetime
+import re
 
 class Quotes(PythagoreModule):
     def __init__(self, pythagore):
@@ -53,7 +54,9 @@ class Quotes(PythagoreModule):
             sa.Column('timestamp', sa.DateTime, default=datetime.datetime.now),
             sa.Column('deleted', sa.Boolean, default=False))
 
-        sao.mapper(Quote, self.qtable)
+        sao.mapper(Quote, self.qtable, properties={
+            'channel': sao.relation(Channel),
+            })
         
         try:
             self.config['minWordsInQuotes']
@@ -147,7 +150,7 @@ class Quotes(PythagoreModule):
         
         if all:
             try:
-                quotes = self.bot.session.query(Quote).join(self.bot.tables["channels"]).\
+                quotes = self.bot.session.query(Quote).join("channel").\
                     filter(Quote.deleted == False).filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
                                                                 Quote.cid == self.bot.channels[channel].cid)).all()
             except:
@@ -177,18 +180,24 @@ class Quotes(PythagoreModule):
             elif words[0].startswith("-c=") or words[0].startswith("--channel="):
                 chan = words[0].split("=", 1)[1]
                 del words[0]
-            
-            toSearch = self.bot.u_("%"+"%".join(words)+"%", channel).encode('UTF-8')
+                
+            if len(''.join(words)) < 4:
+                self.bot.say(channel, _("Quote too short !"))
+                return
+
+            words = [re.escape(word) for word in words]
+            toSearch = self.bot.u_(".+".join(words), channel)
+
 
             print repr(toSearch)
         
             if all:
                 try:
                     quotes = self.bot.session.query(Quote).\
-                        join(self.bot.tables["channels"]).filter(Quote.deleted == False).\
-                                                            filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
-                                                                         Quote.cid == self.bot.channels[channel].cid)).\
-                                                            filter(Quote.content.like(toSearch)).all()
+                        join("channel").filter(Quote.deleted == False).\
+                                        filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
+                                                      Quote.cid == self.bot.channels[channel].cid)).\
+                                        filter(Quote.content.op('regexp')(toSearch)).all()
                 except:
                     self.bot.say(channel, _("No quote found !"))
                     return
@@ -201,7 +210,7 @@ class Quotes(PythagoreModule):
                 try:
                     quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).\
                                                             filter(Quote.cid == self.bot.channels[channel].cid).\
-                                                            filter(Quote.content.like(toSearch)).all()
+                                                            filter(Quote.content.op('regexp')(toSearch)).all()
                 except:
                     self.bot.say(channel, _("No quote found !"))
                     return
@@ -244,11 +253,10 @@ class Quotes(PythagoreModule):
         if all:
             try:
                 quote = self.bot.session.query(Quote).\
-                        join(self.bot.tables["channels"]).\
-                        filter(Quote.deleted == False).\
-                        filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
-                                    Quote.cid == self.bot.channels[channel].cid)).\
-                        order_by(Quote.qid.desc()).first()
+                        join("channel").filter(Quote.deleted == False).\
+                                        filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
+                                                      Quote.cid == self.bot.channels[channel].cid)).\
+                                        order_by(Quote.qid.desc()).first()
             except sa.exceptions.InvalidRequestError:
                 self.bot.say(channel, _("No quote found !"))
                 return

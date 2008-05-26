@@ -66,7 +66,7 @@ class PythagoreBot(irc.IRCClient):
         self.SQLInit ()
 
         self.modules = {}
-        self.channels = dict([(channel.name,channel) for channel in self.session.query(Channel).all() if channel.enabled])
+        self.channels = dict([(channel.name.encode('UTF-8'),channel) for channel in self.session.query(Channel).all() if channel.enabled])
         self.moduleinstances = {}
         self.keywords = {}
         self.prefixes = {}
@@ -231,6 +231,15 @@ class PythagoreBot(irc.IRCClient):
         message = self.to_encoding(message, enc=self.channels[channel].encoding)
 
         irc.IRCClient.say(self, channel, message, length)
+
+    def msg(self, dest, message, length = None):
+        """Sends 'message' to 'dest' limiting line length to 'length'"""
+        if not isinstance(message, basestring):
+            message = str(message)
+        
+        message = self.to_encoding(message)
+
+        irc.IRCClient.msg(self, dest, message, length)
     
     def error(self, channel, message=_('Error !')):
         """Sends 'message' to 'channel' appending the URL to the bot's documentation"""
@@ -343,7 +352,7 @@ class PythagoreBotConnector(protocol.ClientFactory):
     def SQLInit(self):
         """This initializes the class mapping and connection to the database"""
         
-        self.engine = sa.create_engine(self.conf["db_uri"], echo=False)
+        self.engine = sa.create_engine(self.conf["db_uri"], echo=False, connect_args = {'use_unicode': True, 'charset': "utf8"})
         self.metadata = sa.MetaData()
         self.metadata.bind = self.engine
 

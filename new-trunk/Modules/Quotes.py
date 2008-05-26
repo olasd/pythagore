@@ -70,7 +70,7 @@ class Quotes(PythagoreModule):
             return
         # s'il y a assez de mots dans la quote
         if len(words) >= int(self.config['minWordsInQuotes']):
-            newquote = Quote(nick, self.bot.u_(msg, channel).encode('UTF-8'), self.bot.channels[channel].cid)
+            newquote = Quote(nick, self.bot.u_(msg, channel), self.bot.channels[channel].cid)
             self.bot.session.save(newquote)
             self.bot.session.commit()
             if newquote.qid is not None:
@@ -309,7 +309,7 @@ class Quotes(PythagoreModule):
             if self.bot.channels[channel].cid == quote.cid or self.isPublicChannel(quote.cid):
                 self.bot.say(
                     channel,
-                    _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content.encode(self.bot.channels[channel].encoding)}
+                    _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': self.bot.u_(quote.content, channel)}
                     )
             else:
                 self.bot.say(channel, _("No quote found !"))
@@ -319,7 +319,7 @@ class Quotes(PythagoreModule):
         if row:
             self.bot.msg(
                 nick,
-                _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content}
+                self.bot.to_encoding(_("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content})
                 )
 
     def isPublicChannel(self, channel):

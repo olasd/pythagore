@@ -189,8 +189,6 @@ class Quotes(PythagoreModule):
             toSearch = self.bot.u_(".+".join(words), channel)
 
 
-            print repr(toSearch)
-        
             if all:
                 try:
                     quotes = self.bot.session.query(Quote).\
@@ -216,8 +214,8 @@ class Quotes(PythagoreModule):
                     return
             
             if quotes:
+                quotes.reverse()
                 quotenums = [str(quote.qid) for quote in quotes]
-                print ", ".join(quotenums)
                 nbFound = len(quotes)
                 self.bot.say(channel, nbFound > 1 and _("%(num)s quotes found:") % {'num': nbFound}
                                                   or  _("1 quote found:"))
@@ -229,7 +227,7 @@ class Quotes(PythagoreModule):
                     self.printQuoteToNick(nick, quotes[i])
                     i+=1
                 if i < nbFound:
-                    self.bot.say(nick, nbFound-5 > 1 and _("%(num)s other quotes found: %(quotenums)s") % {'num': nbFound-5,
+                    self.bot.msg(nick, nbFound-5 > 1 and _("%(num)s other quotes found: %(quotenums)s") % {'num': nbFound-5,
                                                                                                            'quotenums': ", ".join(quotenums[5:])}
                                                      or _("One other quote found: %(quotenum)s") % {'quotenum': quotenums[5]}) 
             else:
@@ -324,7 +322,7 @@ class Quotes(PythagoreModule):
     
     def printQuoteToNick(self, nick, quote):
         """Prints quote as a private message"""
-        if row:
+        if quote:
             self.bot.msg(
                 nick,
                 self.bot.to_encoding(_("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': quote.content})

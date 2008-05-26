@@ -126,7 +126,7 @@ msgstr "1 citation trouvée :"
 
 #: ../Modules/Quotes.py:222
 msgid "%(num)s other quotes found: %(quotenums)s"
-msgstr "%(num)s autres citations trouvées : %(quotenum)s"
+msgstr "%(num)s autres citations trouvées : %(quotenums)s"
 
 #: ../Modules/Quotes.py:224
 msgid "One other quote found: %(quotenum)s"

@@ -50,6 +50,35 @@ from Mapped import Channel, Module
 
 from Shared import *
 
+
+class IRCObserver:
+    """
+    Log observer sending traceback messages to IRC when available
+    """
+    
+    def __init__(self, pythagore):
+        self.bot = pythagore
+        
+        try:
+            self.logchannel = self.bot.conf['debug_channel']
+        except KeyError:
+            self.logchannel = '#pythagore-dev'
+
+    def _emit(self, eventDict):
+        if 'failure' in eventDict:
+            text = eventDict['failure'].getTraceback().splitlines()
+        else:
+            text = [str(m) for m in eventDict["message"]]
+
+        for line in text:
+            self.bot.msg(self.logchannel, line)
+
+    def start(self):
+        log.addObserver(self._emit)
+
+    def stop(self):
+        log.removeObserver(self._emit)
+
 class PythagoreBot(irc.IRCClient):
     """A Pythagore IRC bot."""
     
@@ -85,6 +114,8 @@ class PythagoreBot(irc.IRCClient):
         irc.IRCClient.connectionMade(self)
         self.conn_t = time.time()
         self.registerModule("Admin")
+        self.observer = IRCObserver(self)
+        self.observer.start()
 
     def connectionLost(self, reason):
         """This function gets called whenever the bot gets disconnected from the network"""
@@ -93,6 +124,7 @@ class PythagoreBot(irc.IRCClient):
                 _("[disconnected at %s]") %
                 time.asctime(time.localtime(time.time())))
         self.logger.close()
+        self.observer.stop()
 
     # This function (c) Frédéric Pauget, released under GPLv2.
     def to_encoding(self, txt, enc="ISO8859-15"):

@@ -66,8 +66,8 @@ class Admin(PythagoreModule):
                 # No encoding was given, we keep the default.
                 pass
 
-            # We enable all modules for this new channel
-            newchannel.modules = self.bot.session.query(Module).all()
+            # We enable the Admin and Logger modules for this channel
+            newchannel.modules = self.bot.session.query(Module).filter(sa.or_(Module.name=="Admin",Module.name=="Logger")).all()
 
             self.bot.session.save(newchannel)
             self.bot.session.commit()
@@ -94,6 +94,8 @@ class Admin(PythagoreModule):
                         self.bot.say(channel, _("Enabling module %(module)s") % {'module': modulename})
                         self.bot.channels[channel].modules.append(module)
                         self.bot.session.commit()
+                    if modulename not in self.bot.modules:
+                        self.bot.registerModule(modulename)
 
     def disableModule(self, channel, nick, msg):
         """Disables the given module in the channel."""

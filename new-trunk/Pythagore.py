@@ -266,6 +266,21 @@ class PythagoreBot(irc.IRCClient):
             print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time(),'channel': self.u_(channel, channel)}
             self.join(channel)
 
+    def join(self, channel):
+        """This is called when the bot wants to join a channel. It loads all required modules if applicable"""
+        
+        try:
+            module_names = [module.name for module in self.channels[channel].modules]
+        except KeyError:
+            # Channel not found, we don't load any modules
+            pass
+        else:
+            for module in module_names:
+                if module not in self.modules:
+                    self.registerModule(module)
+
+        irc.IRCClient.join(self, channel)
+
     def joined(self, channel):
         """This will get called when the bot joins the channel."""
         self.logger.log(channel, _("[I have joined %(channel)s]") % {'channel': self.u_(channel, channel)})

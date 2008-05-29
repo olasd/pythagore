@@ -99,7 +99,21 @@ class PythagoreBot(irc.IRCClient):
         self.moduleinstances = {}
         self.keywords = {}
         self.prefixes = {}
-        self.message_rex = re.compile(r"^!(?P<command>[a-zA-Z]+)([ \t]+(?P<args>.*))?$")
+        
+        self.message_rex = re.compile(r"""
+                ^ # beginning of line
+                ( # formatting
+                    \x02                          # bold
+                   |\x03[0-9]{0,2}(\,[0-9]{1,2})? # color code (can have 0 to 2 arguments)
+                   |\x16                          # invert color
+                   |\x1f                          # underline
+                   |\x0f                          # reset formatting
+                )* # or lack thereof
+                !  # the magic bang
+                (?P<command>[a-zA-Z0-9]+) # the command can be of any alphanumeric characters
+                ([ \t]+(?P<args>.*))?  # arguments should be separated from command with one or more space or tab characters
+                $ # end of line
+                """, re.UNICODE | re.VERBOSE)
 
     def SQLInit(self):
         """This function sets up the convenience pointers to SQL objects from the factory"""
@@ -323,8 +337,8 @@ class PythagoreBot(irc.IRCClient):
         user = user.split('!', 1)[0]
         str = _("(%(user)s) %(msg)s") % {'user': e_(user), 'msg': self.u_(msg, channel)}
         self.logger.log(channel, str)
-        # The message may be one of the bot's commands
-        if msg.startswith('!'):
+        # The message may be one of the bot's commands if it contains ! as one of its characters
+        if '!' in msg:
             m = self.message_rex.match(msg)
             if m:
                 self.words_callback(m.group('command'), channel, user, m.group('args'))

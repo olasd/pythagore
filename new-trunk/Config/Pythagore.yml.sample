@@ -3,12 +3,6 @@ port: 6667
 nick: Pyth
 logdir: teepi
 logsuffix: .log
-channels: 
-    - pytest
-    - pytest2
-    - pytest3
-encodings:
-    "pcinpact-linux": "UTF-8"
 db_uri: mysql://pythagore:toto1234@localhost/pythagore
 table_names:
     channels: channels

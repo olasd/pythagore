@@ -152,7 +152,7 @@ class Quotes(PythagoreModule):
             try:
                 quotes = self.bot.session.query(Quote).join("channel").\
                     filter(Quote.deleted == False).filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
-                                                                Quote.cid == self.bot.channels[channel].cid)).all()
+                                                                Quote.cid == self.bot.channels[channel].cid))
             except:
                 self.bot.say(channel, _("No quote found !"))
                 return
@@ -160,10 +160,11 @@ class Quotes(PythagoreModule):
             if channel != chan and not self.isPublicChannel(chan):
                 self.bot.say(channel, _("No quote found !"))
                 return
-            quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[channel].cid).all()
+            quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[channel].cid)
         
         if quotes:
-            self.printQuoteToChan(channel, quotes[random.randint(0,len(quotes)-1)])
+            numquotes = quotes.count()
+            self.printQuoteToChan(channel, quotes[random.randint(0,numquotes-1)])
         else:
             self.bot.say(channel, _("No quote found !"))
 

@@ -3,6 +3,7 @@ port: 6667
 nick: Pyth
 oper_nick: pythagore
 oper_pwd: harDtoFind
+nickserv_pwd: harDtoFindToo
 logdir: teepi
 logsuffix: .log
 db_uri: mysql://pythagore:toto1234@localhost/pythagore
@@ -12,3 +13,4 @@ table_names:
     enabled_modules: enabled_modules
 debug_channel = #pythagore-dev
 helpurl: 'http://aide.teepi.net/index.php/Pythagore'
+

@@ -147,6 +147,13 @@ class PythagoreBot(irc.IRCClient):
             except KeyError:
                 self.oper(self.conf["oper_pwd"])
 
+        try:
+            pwd = self.conf["nickserv_pwd"]:
+        except KeyError:
+            pass
+        else:
+            self.msg('NickServ', u'IDENTIFY %(pwd)s' % {'pwd': pwd})
+
     def connectionLost(self, reason):
         """This function gets called whenever the bot gets disconnected from the network"""
         irc.IRCClient.connectionLost(self, reason)

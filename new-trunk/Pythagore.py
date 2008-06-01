@@ -100,7 +100,7 @@ class PythagoreBot(irc.IRCClient):
         self.keywords = {}
         self.prefixes = {}
 
-        self.protectedmodules = ['Admin', 'Logger']
+        self.protectedmodules = ('Admin', 'Logger')
         
         self.message_rex = re.compile(r"""
                 ^ # beginning of line
@@ -328,7 +328,7 @@ class PythagoreBot(irc.IRCClient):
         # We refresh the channel's configuration
         self.session.refresh(self.channels[channel])
         word = self.strip_formatting(word)
-        if word in self.keywords and self.keywords[word][1] in self.channels[channel].modules:
+        if word in self.keywords and (self.keywords[word][1] in self.protectedmodules or self.keywords[word][1] in self.channels[channel].modules):
             if msg:
                 msg = self.u_(msg, channel)
             method = self.keywords[word][0]

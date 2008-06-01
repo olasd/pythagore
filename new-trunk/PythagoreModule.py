@@ -52,7 +52,7 @@ class PythagoreModule:
             self.config = yaml.safe_load(configfile)
             configfile.close()
         except:
-            print "Config file for %s not open !" % name
+            print _("Config file for %(module)s not open !") % {'module': name}
             self.config = {}
             return
 

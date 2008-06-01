@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2008-04-27 13:17+CEST\n"
+"POT-Creation-Date: 2008-06-01 13:09+CEST\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,25 +15,29 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: ../Modules/Admin.py:77 ../Pythagore.py:264
+#: ../Modules/Admin.py:77 ../Pythagore.py:335
 msgid "[%(timestamp)s] joining %(channel)s"
 msgstr ""
 
-#: ../Modules/Admin.py:86 ../Modules/Admin.py:104
-#: ../Modules/GoogleSearch.py:54 ../Modules/Quotes.py:107
-#: ../Modules/Quotes.py:301
+#: ../Modules/Admin.py:81
+msgid "Hello, I am Pythagore, and my documentation can be found at %(url)s"
+msgstr ""
+
+#: ../Modules/Admin.py:90 ../Modules/Admin.py:110
+#: ../Modules/GoogleSearch.py:54 ../Modules/Quotes.py:110
+#: ../Modules/Quotes.py:310
 msgid "Too few parameters."
 msgstr ""
 
-#: ../Modules/Admin.py:91 ../Modules/Admin.py:109
+#: ../Modules/Admin.py:95 ../Modules/Admin.py:117
 msgid "No such module %(module)s"
 msgstr ""
 
-#: ../Modules/Admin.py:94
+#: ../Modules/Admin.py:98
 msgid "Enabling module %(module)s"
 msgstr ""
 
-#: ../Modules/Admin.py:112
+#: ../Modules/Admin.py:120
 msgid "Disabling module %(module)s"
 msgstr ""
 
@@ -45,88 +49,88 @@ msgstr ""
 msgid "Google results for [%(query)s]:"
 msgstr ""
 
-#: ../Modules/Logger.py:62
+#: ../Modules/Logger.py:63
 msgid "[%H:%M:%S]"
 msgstr ""
 
-#: ../Modules/Logger.py:63
+#: ../Modules/Logger.py:64
 msgid ""
 "%(timestamp)s %(message)s\n"
 msgstr ""
 
-#: ../Modules/Quotes.py:69
+#: ../Modules/Quotes.py:72
 msgid "Missing quote contents !"
 msgstr ""
 
-#: ../Modules/Quotes.py:77
+#: ../Modules/Quotes.py:80
 msgid "Quote number \002%(qid)s\002 added !"
 msgstr ""
 
-#: ../Modules/Quotes.py:79
+#: ../Modules/Quotes.py:82 ../Modules/Quotes.py:186
 msgid "Quote too short !"
 msgstr ""
 
-#: ../Modules/Quotes.py:90 ../Modules/Quotes.py:118 ../Modules/Quotes.py:278
+#: ../Modules/Quotes.py:93 ../Modules/Quotes.py:121 ../Modules/Quotes.py:286
 msgid "Argument should be a number !"
 msgstr ""
 
-#: ../Modules/Quotes.py:95 ../Modules/Quotes.py:123 ../Modules/Quotes.py:283
+#: ../Modules/Quotes.py:98 ../Modules/Quotes.py:126 ../Modules/Quotes.py:291
+#: ../Modules/Quotes.py:301
 msgid "Quote number \002%(qid)s\002 doesn't exist !"
 msgstr ""
 
-#: ../Modules/Quotes.py:101
+#: ../Modules/Quotes.py:104
 msgid "Quote number \002%(qid)s\002 deleted"
 msgstr ""
 
-#: ../Modules/Quotes.py:103
+#: ../Modules/Quotes.py:106
 msgid "You're not allowed to delete this quote !"
 msgstr ""
 
-#: ../Modules/Quotes.py:105 ../Modules/Quotes.py:128
+#: ../Modules/Quotes.py:108 ../Modules/Quotes.py:131
 msgid "Too many parameters."
 msgstr ""
 
-#: ../Modules/Quotes.py:145 ../Modules/Quotes.py:241
+#: ../Modules/Quotes.py:148 ../Modules/Quotes.py:250
 msgid "Incorrect parameters !"
 msgstr ""
 
-#: ../Modules/Quotes.py:154 ../Modules/Quotes.py:158 ../Modules/Quotes.py:165
-#: ../Modules/Quotes.py:192 ../Modules/Quotes.py:197 ../Modules/Quotes.py:205
-#: ../Modules/Quotes.py:226 ../Modules/Quotes.py:252 ../Modules/Quotes.py:263
-#: ../Modules/Quotes.py:269 ../Modules/Quotes.py:293 ../Modules/Quotes.py:299
-#: ../Modules/Quotes.py:313
+#: ../Modules/Quotes.py:157 ../Modules/Quotes.py:161 ../Modules/Quotes.py:169
+#: ../Modules/Quotes.py:201 ../Modules/Quotes.py:206 ../Modules/Quotes.py:214
+#: ../Modules/Quotes.py:235 ../Modules/Quotes.py:260 ../Modules/Quotes.py:271
+#: ../Modules/Quotes.py:277 ../Modules/Quotes.py:308 ../Modules/Quotes.py:322
 msgid "No quote found !"
 msgstr ""
 
-#: ../Modules/Quotes.py:212
+#: ../Modules/Quotes.py:221
 msgid "%(num)s quotes found:"
 msgstr ""
 
-#: ../Modules/Quotes.py:213
+#: ../Modules/Quotes.py:222
 msgid "1 quote found:"
 msgstr ""
 
-#: ../Modules/Quotes.py:222
+#: ../Modules/Quotes.py:231
 msgid "%(num)s other quotes found: %(quotenums)s"
 msgstr ""
 
-#: ../Modules/Quotes.py:224
+#: ../Modules/Quotes.py:233
 msgid "One other quote found: %(quotenum)s"
 msgstr ""
 
-#: ../Modules/Quotes.py:228
+#: ../Modules/Quotes.py:237
 msgid "Define your query !"
 msgstr ""
 
-#: ../Modules/Quotes.py:295
+#: ../Modules/Quotes.py:304
 msgid "the %y/%m/%d at %H:%M:%S"
 msgstr ""
 
-#: ../Modules/Quotes.py:296
+#: ../Modules/Quotes.py:305
 msgid "Quote number \002%(qid)s\002 added by %(author)s on %(date)s, on %(chan)s"
 msgstr ""
 
-#: ../Modules/Quotes.py:310 ../Modules/Quotes.py:320
+#: ../Modules/Quotes.py:319 ../Modules/Quotes.py:329
 msgid "[\002%(qid)s\002] %(contents)s"
 msgstr ""
 
@@ -134,39 +138,43 @@ msgstr ""
 msgid "I've been on %(networkname)s for %(numseconds)s seconds !"
 msgstr ""
 
-#: ../Pythagore.py:111
+#: ../Pythagore.py:154
 msgid "[disconnected at %s]"
 msgstr ""
 
-#: ../Pythagore.py:176
+#: ../Pythagore.py:237
 msgid "-!- %(user)s has joined %(channel)s"
 msgstr ""
 
-#: ../Pythagore.py:193
+#: ../Pythagore.py:254
 msgid "-!- %(user)s has quit (%(quitMessage)s)"
 msgstr ""
 
-#: ../Pythagore.py:242
+#: ../Pythagore.py:312
 msgid "Error !"
 msgstr ""
 
-#: ../Pythagore.py:246
+#: ../Pythagore.py:316
 msgid " See \002%(url)s\002 for more information."
 msgstr ""
 
-#: ../Pythagore.py:269
+#: ../Pythagore.py:365
 msgid "[I have joined %(channel)s]"
 msgstr ""
 
-#: ../Pythagore.py:275
+#: ../Pythagore.py:371
 msgid "(%(user)s) %(msg)s"
 msgstr ""
 
-#: ../Pythagore.py:284
+#: ../Pythagore.py:382
 msgid "* %(user)s %(action)s"
 msgstr ""
 
-#: ../Pythagore.py:351
+#: ../Pythagore.py:485
 msgid "connection failed: "
+msgstr ""
+
+#: ../PythagoreModule.py:55
+msgid "Config file for %(module)s not open !"
 msgstr ""
 

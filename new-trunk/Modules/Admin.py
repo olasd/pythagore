@@ -38,6 +38,7 @@ class Admin(PythagoreModule):
         self.exports['unloadmodule'] = "unloadModule"
         self.exports['die'] = "die"
         self.exports['addchannel'] = "addChannel"
+        self.exports['enablechannel'] = "enableChannel"
         self.exports['enable'] = "enableModule"
         self.exports['disable'] = "disableModule"
 
@@ -71,15 +72,39 @@ class Admin(PythagoreModule):
 
             self.bot.session.save(newchannel)
             self.bot.session.commit()
-            
-            # Now we're all set, we can join this channel after appending it to the bot's channel list
-            self.bot.channels[newchannel.name] = newchannel
-            print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time() ,'channel': newchannel.name}
-            self.bot.join(newchannel.name)
-            self.bot.msg(
-                newchannel.name,
-                _("Hello, I am Pythagore, and my documentation can be found at %(url)s") % {'url': self.bot.conf["helpurl"]}
-                )
+            self.joinChannel(newchannel)
+    
+    def enableChannel(self, channel, nick, msg):
+        """Adds the channel to the bot database. The channel's encoding is given by a second argument."""
+        if nick in self.config["admins"]:
+            args = msg.split()
+           
+            try:
+                newchannel = self.bot.session.query(Channel).filter(Channel.name==args[0].encode('UTF-8')).one()
+            except sa.exceptions.InvalidRequestError:
+                return
+
+            if not newchannel.enabled:
+                newchannel.enabled = True
+                newchannel.modules = list(set(newchannel.modules) | set(self.bot.session.query(Module).filter(sa.or_(Module.name=="Admin",Module.name=="Logger")).all()))
+        
+                self.bot.session.commit()
+
+                self.joinChannel(newchannel)
+    
+    def joinChannel(self, newchannel):
+        """This makes the bot join a channel"""
+        if not isinstance(newchannel, Channel):
+            try:
+                newchannel = self.bot.session.query(Channel).filter(Channel.name==newchannel).one()
+            except sa.exceptions.InvalidRequestError:
+                return
+        
+        # Now we're all set, we can join this channel after appending it to the bot's channel list
+        self.bot.channels[newchannel.name] = newchannel
+
+        print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time() ,'channel': newchannel.name}
+        self.bot.join(newchannel.name)
 
     def enableModule(self, channel, nick, msg):
         """Enables the given module in the channel."""

@@ -11,3 +11,4 @@ table_names:
     modules: modules
     enabled_modules: enabled_modules
 debug_channel = #pythagore-dev
+helpurl: 'http://aide.teepi.net/index.php/Pythagore'

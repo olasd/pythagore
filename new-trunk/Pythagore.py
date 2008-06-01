@@ -313,7 +313,7 @@ class PythagoreBot(irc.IRCClient):
         """Sends 'message' to 'channel' appending the URL to the bot's documentation"""
         self.say(
             channel,
-            message + _(" See \002%(url)s\002 for more information.") % {'url': 'http://aide.teepi.net/index.php/Pythagore'}
+            message + _(" See \002%(url)s\002 for more information.") % {'url': self.conf["helpurl"]}
             )
 
     def words_callback(self, word, channel, nick, msg):

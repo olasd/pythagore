@@ -364,7 +364,7 @@ class PythagoreBot(irc.IRCClient):
        
         self.sendLine('OPER %(nick)s %(password)s' % {'nick': nick, 'password': password})
         time.sleep(2)
-        self.sendLine('MODE %s +B' % self.conf["nick"])
+        self.sendLine('MODE %s +Bp' % self.conf["nick"])
         self.sendLine('MODE %s -h' % self.conf["nick"])
 
     def joined(self, channel):

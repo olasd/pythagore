@@ -31,7 +31,7 @@ import time, sys, os
 
 # twisted imports
 from twisted.words.protocols import irc
-from twisted.internet import reactor, protocol, threads
+from twisted.internet import reactor, protocol
 from twisted.python import log
 
 # SQLAlchemy imports

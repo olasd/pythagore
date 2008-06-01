@@ -1,6 +1,7 @@
 host: localhost
 port: 6667
 nick: Pyth
+oper_nick: pythagore
 oper_pwd: harDtoFind
 logdir: teepi
 logsuffix: .log

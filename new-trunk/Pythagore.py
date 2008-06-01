@@ -142,7 +142,10 @@ class PythagoreBot(irc.IRCClient):
         self.observer.start()
 
         if self.conf["oper_pwd"]:
-            self.oper(self.conf["oper_pwd"])
+            try:
+                self.oper(self.conf["oper_pwd"], nick=self.conf["oper_nick"])
+            except KeyError:
+                self.oper(self.conf["oper_pwd"])
 
     def connectionLost(self, reason):
         """This function gets called whenever the bot gets disconnected from the network"""
@@ -351,10 +354,11 @@ class PythagoreBot(irc.IRCClient):
         """This is called for the bot to OPER up, using 'password' as password, and 'nick' as a nick if given."""
         if not nick:
             nick = self.conf["nick"]
-        
+       
         self.sendLine('OPER %(nick)s %(password)s' % {'nick': nick, 'password': password})
         time.sleep(2)
         self.sendLine('MODE %s +B' % self.conf["nick"])
+        self.sendLine('MODE %s -h' % self.conf["nick"])
 
     def joined(self, channel):
         """This will get called when the bot joins the channel."""

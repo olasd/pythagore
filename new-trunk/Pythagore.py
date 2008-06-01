@@ -148,7 +148,7 @@ class PythagoreBot(irc.IRCClient):
                 self.oper(self.conf["oper_pwd"])
 
         try:
-            pwd = self.conf["nickserv_pwd"]:
+            pwd = self.conf["nickserv_pwd"]
         except KeyError:
             pass
         else:

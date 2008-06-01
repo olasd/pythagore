@@ -99,6 +99,8 @@ class PythagoreBot(irc.IRCClient):
         self.moduleinstances = {}
         self.keywords = {}
         self.prefixes = {}
+
+        self.protectedmodules = ['Admin', 'Logger']
         
         self.message_rex = re.compile(r"""
                 ^ # beginning of line
@@ -390,7 +392,7 @@ class PythagoreBot(irc.IRCClient):
 
     def unregisterModule(self, modname):
         """This unregisters a module, by removing its symbols from the lookup table, and the corresponding Class instance"""
-        if modname in self.moduleinstances:
+        if modname in self.moduleinstances and modname not in self.protectedmodules:
             for i in self.moduleinstances[modname].exports:
                 if self.keywords[i][1] == modname:
                     del self.keywords[i]

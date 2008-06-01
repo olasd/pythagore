@@ -106,11 +106,17 @@ class Admin(PythagoreModule):
                 self.bot.error(channel, _("Too few parameters."))
             else:
                 try:
+                    if modulename in self.bot.protectedmodules:
+                        raise DisableProtectedModule
                     module = self.bot.session.query(Module).filter(Module.name==modulename).one()
-                except sa.exceptions.InvalidRequestError:
+                except (sa.exceptions.InvalidRequestError, DisableProtectedModule):
                     self.bot.error(channel, _("No such module %(module)s") % {'module': modulename})
                 else:
                     if module in self.bot.channels[channel].modules:
                         self.bot.say(channel, _("Disabling module %(module)s") % {'module': modulename})
                         self.bot.channels[channel].modules.remove(module)
                         self.bot.session.commit()
+
+class DisableProtectedModule(exception):
+    """Exception raised when someone tries to disable a protected module"""
+    pass

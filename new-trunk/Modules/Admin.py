@@ -117,6 +117,6 @@ class Admin(PythagoreModule):
                         self.bot.channels[channel].modules.remove(module)
                         self.bot.session.commit()
 
-class DisableProtectedModule(exception):
+class DisableProtectedModule(Exception):
     """Exception raised when someone tries to disable a protected module"""
     pass

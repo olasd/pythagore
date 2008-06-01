@@ -55,7 +55,7 @@ class GoogleSearch(PythagoreModule):
                     )
             return
 
-        result = self.google(msg)
+        result = self.google(self.bot.strip_formatting(msg))
         if len(result) == 0:
             self.bot.say(
                     channel,

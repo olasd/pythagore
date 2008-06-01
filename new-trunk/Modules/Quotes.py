@@ -186,7 +186,7 @@ class Quotes(PythagoreModule):
                 self.bot.say(channel, _("Quote too short !"))
                 return
 
-            words = [re.escape(word) for word in words]
+            words = [re.escape(self.bot.strip_formatting(word)) for word in words]
             toSearch = self.bot.u_(".+".join(words), channel)
 
 

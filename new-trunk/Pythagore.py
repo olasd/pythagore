@@ -117,6 +117,14 @@ class PythagoreBot(irc.IRCClient):
                 $ # end of line
                 """, re.UNICODE | re.VERBOSE)
 
+        self.formatting_rex = re.compile(r"""(
+                 \x02                          # bold
+                |\x03[0-9]{0,2}(\,[0-9]{1,2})? # color code (can have 0 to 2 arguments)
+                |\x16                          # invert color
+                |\x1f                          # underline
+                |\x0f                          # reset formatting
+               )""", re.UNICODE | re.VERBOSE)
+
     def SQLInit(self):
         """This function sets up the convenience pointers to SQL objects from the factory"""
         self.engine = self.factory.engine
@@ -165,6 +173,12 @@ class PythagoreBot(irc.IRCClient):
         return to_unicode(txt, enc)
 
     u_ = to_unicode_with_channel_enc
+
+    def strip_formatting(self, msg, repl=u''):
+        """Strips all formatting from message 'msg', replacing it with 'repl'.
+        Formatting is defined in self.formatting_rex.
+        'repl' should be whatever re.sub's second argument accepts"""
+        return self.formatting_rex.sub(repl, msg)
 
     # The following methods handle the user modes dictionnary
 

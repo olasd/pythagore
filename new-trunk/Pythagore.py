@@ -112,8 +112,8 @@ class PythagoreBot(irc.IRCClient):
                    |\x0f                          # reset formatting
                 )* # or lack thereof
                 !  # the magic bang
-                (?P<command>[a-zA-Z0-9]+) # the command can be of any alphanumeric characters
-                ([ \t]+(?P<args>.*))?  # arguments should be separated from command with one or more space or tab characters
+                (?P<command>\S+)    # the command can be of any non-space characters
+                (\s+(?P<args>.*))?  # arguments should be separated from command with one or more space characters
                 $ # end of line
                 """, re.UNICODE | re.VERBOSE)
 
@@ -314,6 +314,7 @@ class PythagoreBot(irc.IRCClient):
         """This function is called when a message matches the pattern given by 'say'"""
         # We refresh the channel's configuration
         self.session.refresh(self.channels[channel])
+        word = self.strip_formatting(word)
         if word in self.keywords and self.keywords[word][1] in self.channels[channel].modules:
             if msg:
                 msg = self.u_(msg, channel)

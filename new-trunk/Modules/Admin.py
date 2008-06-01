@@ -76,6 +76,10 @@ class Admin(PythagoreModule):
             self.bot.channels[newchannel.name] = newchannel
             print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time() ,'channel': newchannel.name}
             self.bot.join(newchannel.name)
+            self.bot.msg(
+                newchannel.name,
+                _("Hello, I am Pythagore, and my documentation can be found at %(url)s") % {'url': self.bot.conf["helpurl"]}
+                )
 
     def enableModule(self, channel, nick, msg):
         """Enables the given module in the channel."""

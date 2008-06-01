@@ -305,7 +305,7 @@ class PythagoreBot(irc.IRCClient):
 
         message = self.to_encoding(message, enc=self.channels[channel].encoding)
 
-        irc.IRCClient.say(self, channel, message, length)
+        irc.IRCClient.msg(self, channel, message, length)
 
     def msg(self, dest, message, length = None):
         """Sends 'message' to 'dest' limiting line length to 'length'"""
@@ -355,7 +355,7 @@ class PythagoreBot(irc.IRCClient):
                 if module not in self.modules:
                     self.registerModule(module)
 
-        irc.IRCClient.join(self, channel)
+        irc.IRCClient.join(self, self.to_encoding(channel, enc='UTF-8'))
 
     def oper(self, password, nick=None):
         """This is called for the bot to OPER up, using 'password' as password, and 'nick' as a nick if given."""

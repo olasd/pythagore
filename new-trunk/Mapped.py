@@ -7,6 +7,7 @@
 # Mapped.py : Pythagore Bot common mapped objects
 #
 # Copyright (C) 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright (C) 2008 Nicolas Maître <nox@teepi.net>
 #
 # This file is part of Pythagore.
 #
@@ -33,6 +34,7 @@ class Channel(object):
         self.publicquotes = public 
         self.usermodes = {}
         self.enabled = enabled
+        self.feeds = []
 
 class Module(object):
     """An object representing a module, to be mapped via SQLAlchemy"""
@@ -47,3 +49,10 @@ class Quote(object):
         self.author = author
         self.content = content
         self.cid = channel
+
+class Feed(object):
+    """An object representing a RSS feed, to be mapped via SQLAlchemy"""
+
+    def __init__(self, name, url):
+        self.name = name
+        self.url = url

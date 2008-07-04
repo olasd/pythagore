@@ -1,0 +1,7 @@
+modes2Admin: qao
+feeds_table: feeds
+selected_feeds_table: selected_feeds
+admins: -NoX
+        -NicolasD
+cacheDir: cache
+time_interval: 600

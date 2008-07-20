@@ -95,7 +95,10 @@ class PythagoreBot(irc.IRCClient):
         self.SQLInit ()
 
         self.modules = {}
-        self.channels = dict([(channel.name.encode('UTF-8'),channel) for channel in self.session.query(Channel).all() if channel.enabled])
+        self.channels = {}
+        for channel in self.session.query(Channel).all():
+            if channel.enabled:
+                self.channels[channel.name.encode('UTF-8')] = channel
         self.moduleinstances = {}
         self.keywords = {}
         self.prefixes = {}

@@ -41,6 +41,7 @@ import sqlalchemy.orm as sao
 # Gettext import
 import gettext
 gettext.install('pythagore', './locale', unicode=True)
+gettext.bindtextdomain_codeset('pythagore', 'UTF-8')
 
 # yaml import
 import yaml

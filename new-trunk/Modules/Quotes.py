@@ -33,6 +33,7 @@ import sqlalchemy as sa
 import sqlalchemy.orm as sao
 import datetime
 import re
+import gettext
 
 class Quotes(PythagoreModule):
     def __init__(self, pythagore):
@@ -218,8 +219,7 @@ class Quotes(PythagoreModule):
                 quotes.reverse()
                 quotenums = [str(quote.qid) for quote in quotes]
                 nbFound = len(quotes)
-                self.bot.say(channel, nbFound > 1 and _("%(num)s quotes found:") % {'num': nbFound}
-                                                  or  _("1 quote found:"))
+                self.bot.say(channel, gettext.lngettext("%(num)s quote found:", "%(num)s quotes found:", nbFound) % {'num': nbFound})
                 i = 0
                 while i < 3 and i < nbFound:
                     self.printQuoteToChan(channel, quotes[i])
@@ -228,9 +228,9 @@ class Quotes(PythagoreModule):
                     self.printQuoteToNick(nick, quotes[i])
                     i+=1
                 if i < nbFound:
-                    self.bot.msg(nick, nbFound-5 > 1 and _("%(num)s other quotes found: %(quotenums)s") % {'num': nbFound-5,
-                                                                                                           'quotenums': ", ".join(quotenums[5:])}
-                                                     or _("One other quote found: %(quotenum)s") % {'quotenum': quotenums[5]}) 
+                    self.bot.msg(nick, gettext.lngettext("1 other quote found: %(quotenums)s",
+                                                         "%(num)s other quotes found: %(quotenums)s",
+                                                         nbFound - 5) % {'num': nbFound-5, 'quotenums': ", ".join(quotenums[5:])})
             else:
                 self.bot.say(channel, _("No quote found !"))
         else:

@@ -34,6 +34,7 @@ import sqlalchemy.orm as sao
 import datetime
 import re
 import gettext
+ngettext = gettext.lngettext
 
 class Quotes(PythagoreModule):
     def __init__(self, pythagore):
@@ -219,7 +220,7 @@ class Quotes(PythagoreModule):
                 quotes.reverse()
                 quotenums = [str(quote.qid) for quote in quotes]
                 nbFound = len(quotes)
-                self.bot.say(channel, gettext.lngettext("%(num)s quote found:", "%(num)s quotes found:", nbFound) % {'num': nbFound})
+                self.bot.say(channel, ngettext("%(num)s quote found:", "%(num)s quotes found:", nbFound) % {'num': nbFound})
                 i = 0
                 while i < 3 and i < nbFound:
                     self.printQuoteToChan(channel, quotes[i])
@@ -228,7 +229,7 @@ class Quotes(PythagoreModule):
                     self.printQuoteToNick(nick, quotes[i])
                     i+=1
                 if i < nbFound:
-                    self.bot.msg(nick, gettext.lngettext("1 other quote found: %(quotenums)s",
+                    self.bot.msg(nick, ngettext("%(num)s other quote found: %(quotenums)s",
                                                          "%(num)s other quotes found: %(quotenums)s",
                                                          nbFound - 5) % {'num': nbFound-5, 'quotenums': ", ".join(quotenums[5:])})
             else:

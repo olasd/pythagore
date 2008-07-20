@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2008-06-01 13:09+CEST\n"
+"POT-Creation-Date: 2008-07-20 16:50+CEST\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,29 +15,26 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: ../Modules/Admin.py:77 ../Pythagore.py:335
+#: ../Modules/Admin.py:106 ../Pythagore.py:352
 msgid "[%(timestamp)s] joining %(channel)s"
 msgstr ""
 
-#: ../Modules/Admin.py:81
-msgid "Hello, I am Pythagore, and my documentation can be found at %(url)s"
-msgstr ""
-
-#: ../Modules/Admin.py:90 ../Modules/Admin.py:110
-#: ../Modules/GoogleSearch.py:54 ../Modules/Quotes.py:110
-#: ../Modules/Quotes.py:310
+#: ../Modules/Admin.py:115 ../Modules/Admin.py:135
+#: ../Modules/GoogleSearch.py:54 ../Modules/Quotes.py:111
+#: ../Modules/Quotes.py:310 ../Modules/RSS.py:94 ../Modules/RSS.py:117
+#: ../Modules/RSS.py:145 ../Modules/RSS.py:172
 msgid "Too few parameters."
 msgstr ""
 
-#: ../Modules/Admin.py:95 ../Modules/Admin.py:117
+#: ../Modules/Admin.py:120 ../Modules/Admin.py:142
 msgid "No such module %(module)s"
 msgstr ""
 
-#: ../Modules/Admin.py:98
+#: ../Modules/Admin.py:123
 msgid "Enabling module %(module)s"
 msgstr ""
 
-#: ../Modules/Admin.py:120
+#: ../Modules/Admin.py:145
 msgid "Disabling module %(module)s"
 msgstr ""
 
@@ -58,64 +55,49 @@ msgid ""
 "%(timestamp)s %(message)s\n"
 msgstr ""
 
-#: ../Modules/Quotes.py:72
+#: ../Modules/Quotes.py:73
 msgid "Missing quote contents !"
 msgstr ""
 
-#: ../Modules/Quotes.py:80
+#: ../Modules/Quotes.py:81
 msgid "Quote number \002%(qid)s\002 added !"
 msgstr ""
 
-#: ../Modules/Quotes.py:82 ../Modules/Quotes.py:186
+#: ../Modules/Quotes.py:83 ../Modules/Quotes.py:187
 msgid "Quote too short !"
 msgstr ""
 
-#: ../Modules/Quotes.py:93 ../Modules/Quotes.py:121 ../Modules/Quotes.py:286
+#: ../Modules/Quotes.py:94 ../Modules/Quotes.py:122 ../Modules/Quotes.py:286
+#: ../Modules/RSS.py:106 ../Modules/RSS.py:130 ../Modules/RSS.py:159
 msgid "Argument should be a number !"
 msgstr ""
 
-#: ../Modules/Quotes.py:98 ../Modules/Quotes.py:126 ../Modules/Quotes.py:291
+#: ../Modules/Quotes.py:99 ../Modules/Quotes.py:127 ../Modules/Quotes.py:291
 #: ../Modules/Quotes.py:301
 msgid "Quote number \002%(qid)s\002 doesn't exist !"
 msgstr ""
 
-#: ../Modules/Quotes.py:104
+#: ../Modules/Quotes.py:105
 msgid "Quote number \002%(qid)s\002 deleted"
 msgstr ""
 
-#: ../Modules/Quotes.py:106
+#: ../Modules/Quotes.py:107
 msgid "You're not allowed to delete this quote !"
 msgstr ""
 
-#: ../Modules/Quotes.py:108 ../Modules/Quotes.py:131
+#: ../Modules/Quotes.py:109 ../Modules/Quotes.py:132
 msgid "Too many parameters."
 msgstr ""
 
-#: ../Modules/Quotes.py:148 ../Modules/Quotes.py:250
+#: ../Modules/Quotes.py:149 ../Modules/Quotes.py:250
 msgid "Incorrect parameters !"
 msgstr ""
 
-#: ../Modules/Quotes.py:157 ../Modules/Quotes.py:161 ../Modules/Quotes.py:169
-#: ../Modules/Quotes.py:201 ../Modules/Quotes.py:206 ../Modules/Quotes.py:214
+#: ../Modules/Quotes.py:158 ../Modules/Quotes.py:162 ../Modules/Quotes.py:170
+#: ../Modules/Quotes.py:202 ../Modules/Quotes.py:207 ../Modules/Quotes.py:215
 #: ../Modules/Quotes.py:235 ../Modules/Quotes.py:260 ../Modules/Quotes.py:271
 #: ../Modules/Quotes.py:277 ../Modules/Quotes.py:308 ../Modules/Quotes.py:322
 msgid "No quote found !"
-msgstr ""
-
-#: ../Modules/Quotes.py:221
-msgid "%(num)s quotes found:"
-msgstr ""
-
-#: ../Modules/Quotes.py:222
-msgid "1 quote found:"
-msgstr ""
-
-#: ../Modules/Quotes.py:231
-msgid "%(num)s other quotes found: %(quotenums)s"
-msgstr ""
-
-#: ../Modules/Quotes.py:233
-msgid "One other quote found: %(quotenum)s"
 msgstr ""
 
 #: ../Modules/Quotes.py:237
@@ -134,43 +116,87 @@ msgstr ""
 msgid "[\002%(qid)s\002] %(contents)s"
 msgstr ""
 
+#: ../Modules/RSS.py:92
+msgid "URL malformed."
+msgstr ""
+
+#: ../Modules/RSS.py:111 ../Modules/RSS.py:135 ../Modules/RSS.py:164
+msgid "RSS feed number \002%(fid)s\002 doesn't exist !"
+msgstr ""
+
+#: ../Modules/RSS.py:115
+msgid "RSS feed number \002%(fid)s\002 removed."
+msgstr ""
+
+#: ../Modules/RSS.py:124 ../Modules/RSS.py:153
+msgid "You're not allowed to enable RSS feeds here."
+msgstr ""
+
+#: ../Modules/RSS.py:143
+msgid "Feed number \002%(fid)s\002 enabled !"
+msgstr ""
+
+#: ../Modules/RSS.py:170
+msgid "Feed number \002%(fid)s\002 disabled !"
+msgstr ""
+
+#: ../Modules/RSS.py:184
+msgid "There are %(quantity)s enabled feeds on this channel for now :"
+msgstr ""
+
+#: ../Modules/RSS.py:189
+msgid "There's %(quantity)s feeds in the database for now :"
+msgstr ""
+
+#: ../Modules/RSS.py:192
+msgid "\002[%(fid)s]\002 %(name)s : %(url)s"
+msgstr ""
+
+#: ../Modules/RSS.py:264
+msgid "getting page"
+msgstr ""
+
+#: ../Modules/RSS.py:267
+msgid "parsing feed"
+msgstr ""
+
 #: ../Modules/Uptime.py:37
 msgid "I've been on %(networkname)s for %(numseconds)s seconds !"
 msgstr ""
 
-#: ../Pythagore.py:154
+#: ../Pythagore.py:171
 msgid "[disconnected at %s]"
 msgstr ""
 
-#: ../Pythagore.py:237
+#: ../Pythagore.py:254
 msgid "-!- %(user)s has joined %(channel)s"
 msgstr ""
 
-#: ../Pythagore.py:254
+#: ../Pythagore.py:271
 msgid "-!- %(user)s has quit (%(quitMessage)s)"
 msgstr ""
 
-#: ../Pythagore.py:312
+#: ../Pythagore.py:329
 msgid "Error !"
 msgstr ""
 
-#: ../Pythagore.py:316
+#: ../Pythagore.py:333
 msgid " See \002%(url)s\002 for more information."
 msgstr ""
 
-#: ../Pythagore.py:365
+#: ../Pythagore.py:382
 msgid "[I have joined %(channel)s]"
 msgstr ""
 
-#: ../Pythagore.py:371
+#: ../Pythagore.py:388
 msgid "(%(user)s) %(msg)s"
 msgstr ""
 
-#: ../Pythagore.py:382
+#: ../Pythagore.py:399
 msgid "* %(user)s %(action)s"
 msgstr ""
 
-#: ../Pythagore.py:485
+#: ../Pythagore.py:515
 msgid "connection failed: "
 msgstr ""
 

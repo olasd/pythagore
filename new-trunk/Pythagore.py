@@ -385,6 +385,11 @@ class PythagoreBot(irc.IRCClient):
         """This will get called when the bot sees someone do an action."""
         user = user.split('!', 1)[0]
         self.logger.log(channel, _("* %(user)s %(action)s") % {'user': user, 'action': self.u_(msg, channel)})
+    
+    def kickedFrom(self, channel, kicker, message):
+        """This gets called when the bot is kicked from a channel."""
+        # try to rejoin channel
+        self.join(channel)
 
     def registerModule(self, modname):
         """This registers a module. When it is already loaded, the module is first unloaded

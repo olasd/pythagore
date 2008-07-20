@@ -361,7 +361,7 @@ class PythagoreBot(irc.IRCClient):
             pass
         else:
             for module in module_names:
-                if module not in self.modules:
+                if module.lower() not in self.modules:
                     self.registerModule(module)
 
         irc.IRCClient.join(self, self.to_encoding(channel, enc='UTF-8'))

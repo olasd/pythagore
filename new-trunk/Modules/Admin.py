@@ -135,7 +135,7 @@ class Admin(PythagoreModule):
                 self.bot.error(channel, _("Too few parameters."))
             else:
                 try:
-                    if modulename in self.bot.protectedmodules:
+                    if modulename in self.bot.protected_modules:
                         raise DisableProtectedModule
                     module = self.bot.session.query(Module).filter(Module.name==modulename).one()
                 except (sa.exceptions.InvalidRequestError, DisableProtectedModule):

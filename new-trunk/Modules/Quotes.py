@@ -34,7 +34,7 @@ import sqlalchemy.orm as sao
 import datetime
 import re
 import gettext
-ngettext = gettext.lngettext
+ngettext = gettext.ngettext
 
 class Quotes(PythagoreModule):
     def __init__(self, pythagore):

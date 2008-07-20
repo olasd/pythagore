@@ -91,7 +91,7 @@ class RSS(PythagoreModule):
             else:
                 self.bot.error(channel, _("URL malformed."))
         else:
-            self.bot.error(channel, _("To few parameters."))
+            self.bot.error(channel, _("Too few parameters."))
 
        
     def deleteRSS(self, channel, nick, msg):
@@ -189,7 +189,7 @@ class RSS(PythagoreModule):
             self.bot.say(channel, _("There's %(quantity)s feeds in the database for now :") % {'quantity' : count})
             s = self.bot.session.query(Feed).all()
             for row in s:
-                self.bot.say(channel, _("\002[%s]\002 %s : %s" % (row.fid, row.name, row.url)))
+                self.bot.say(channel, _("\002[%(fid)s]\002 %(name)s : %(url)s") % {'fid': row.fid, 'name': row.name, 'url': row.url})
 
 
 class RSS_HTTPConditionnalGet(client.HTTPPageGetter):

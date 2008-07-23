@@ -444,7 +444,7 @@ class PythagoreBot(irc.IRCClient):
             self.keywords[i] = (getattr(
                     self.moduleinstances[modname],
                     self.moduleinstances[modname].exports[i]
-                    ), modname)
+                    ), module)
 
         # We return the class instance, as a convenience for the Logger class
         return self.moduleinstances[modname]

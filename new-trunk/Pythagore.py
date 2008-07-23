@@ -335,9 +335,9 @@ class PythagoreBot(irc.IRCClient):
     def words_callback(self, word, channel, nick, msg):
         """This function is called when a message matches the pattern given by 'say'"""
         # We refresh the channel's configuration
+        channel = channel.lower()
         self.session.refresh(self.channels[channel])
         word = self.strip_formatting(word)
-        channel = channel.lower()
         if word in self.keywords and (self.keywords[word][1] in self.protected_modules or self.keywords[word][1] in self.channels[channel].modules):
             if msg:
                 msg = self.u_(msg, channel)

@@ -184,7 +184,8 @@ class Quotes(PythagoreModule):
                 chan = words[0].split("=", 1)[1]
                 del words[0]
                 
-            if len(''.join(words)) < 4:
+            if len(''.join(words)) < self.config['minWordsInQuotes']:
+ 
                 self.bot.say(channel, _("Quote too short !"))
                 return
 

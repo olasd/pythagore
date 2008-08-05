@@ -252,10 +252,19 @@ class PythagoreBot(irc.IRCClient):
         self.channels[channel].usermodes[user] = ''
         self.logger.log(channel, _("-!- %(user)s has joined %(channel)s") % {'user': user, 'channel': self.u_(channel, channel)})
     
-    def userLeft(self, user, channel):
+    def irc_PART(self, prefix, params):
+        nick = prefix.split('!')[0]
+        channel = params[0]
+        if nick == self.nickname:
+            self.left(channel)
+        else:
+            self.myUserLeft(nick, channel, ' '.join(params[1:]))
+    
+    def myUserLeft(self, user, channel, reason):
         """This gets called when a user leaves a channel"""
         # The user is not in the channel anymore
         del self.channels[channel].usermodes[user]
+        self.logger.log(channel, _("-!- %(user)s has left %(channel)s (%(reason)s)") %  {'user': user, 'channel': self.u_(channel, channel), 'reason': reason})
 
     def userQuit(self, user, quitMessage):
         """This gets called when a user quits the network"""

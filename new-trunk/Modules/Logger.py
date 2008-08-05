@@ -79,12 +79,14 @@ class Logger(PythagoreModule):
         self.chans = {}
 
     def __getitem__(self, key):
+        key = key.lower()
         if key not in self.chans:
             return None
         return self.chans[key]
 
     def log(self, chan, message):
         """Write a message to the file."""
+        chan = chan.lower()
         if chan not in self.chans:
             self.chans[chan] = ChannelLogger(
                 self.conf, chan

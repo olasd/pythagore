@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-20 17:16+0200\n"
+"POT-Creation-Date: 2008-08-07 14:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,12 +33,12 @@ msgstr ""
 #: ../Modules/RSS.py:94 ../Modules/RSS.py:117 ../Modules/RSS.py:145
 #: ../Modules/RSS.py:172 ../Modules/Admin.py:115 ../Modules/Admin.py:135
 #: ../Modules/GoogleSearch.py:54 ../Modules/Quotes.py:112
-#: ../Modules/Quotes.py:311
+#: ../Modules/Quotes.py:312
 msgid "Too few parameters."
 msgstr ""
 
 #: ../Modules/RSS.py:106 ../Modules/RSS.py:130 ../Modules/RSS.py:159
-#: ../Modules/Quotes.py:95 ../Modules/Quotes.py:123 ../Modules/Quotes.py:287
+#: ../Modules/Quotes.py:95 ../Modules/Quotes.py:123 ../Modules/Quotes.py:288
 msgid "Argument should be a number !"
 msgstr ""
 
@@ -89,7 +89,7 @@ msgstr ""
 msgid "parsing feed"
 msgstr ""
 
-#: ../Modules/Admin.py:106 ../Pythagore.py:352
+#: ../Modules/Admin.py:106 ../Pythagore.py:361
 #, python-format
 msgid "[%(timestamp)s] joining %(channel)s"
 msgstr ""
@@ -133,12 +133,12 @@ msgstr ""
 msgid "Quote number %(qid)s added !"
 msgstr ""
 
-#: ../Modules/Quotes.py:84 ../Modules/Quotes.py:188
+#: ../Modules/Quotes.py:84 ../Modules/Quotes.py:189
 msgid "Quote too short !"
 msgstr ""
 
-#: ../Modules/Quotes.py:100 ../Modules/Quotes.py:128 ../Modules/Quotes.py:292
-#: ../Modules/Quotes.py:302
+#: ../Modules/Quotes.py:100 ../Modules/Quotes.py:128 ../Modules/Quotes.py:293
+#: ../Modules/Quotes.py:303
 #, python-format
 msgid "Quote number %(qid)s doesn't exist !"
 msgstr ""
@@ -156,89 +156,94 @@ msgstr ""
 msgid "Too many parameters."
 msgstr ""
 
-#: ../Modules/Quotes.py:150 ../Modules/Quotes.py:251
+#: ../Modules/Quotes.py:150 ../Modules/Quotes.py:252
 msgid "Incorrect parameters !"
 msgstr ""
 
 #: ../Modules/Quotes.py:159 ../Modules/Quotes.py:163 ../Modules/Quotes.py:171
-#: ../Modules/Quotes.py:203 ../Modules/Quotes.py:208 ../Modules/Quotes.py:216
-#: ../Modules/Quotes.py:236 ../Modules/Quotes.py:261 ../Modules/Quotes.py:272
-#: ../Modules/Quotes.py:278 ../Modules/Quotes.py:309 ../Modules/Quotes.py:323
+#: ../Modules/Quotes.py:204 ../Modules/Quotes.py:209 ../Modules/Quotes.py:217
+#: ../Modules/Quotes.py:237 ../Modules/Quotes.py:262 ../Modules/Quotes.py:273
+#: ../Modules/Quotes.py:279 ../Modules/Quotes.py:310 ../Modules/Quotes.py:324
 msgid "No quote found !"
 msgstr ""
 
-#: ../Modules/Quotes.py:223
+#: ../Modules/Quotes.py:224
 #, python-format
 msgid "%(num)s quote found:"
 msgid_plural "%(num)s quotes found:"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../Modules/Quotes.py:232
+#: ../Modules/Quotes.py:233
 #, python-format
 msgid "%(num)s other quote found: %(quotenums)s"
 msgid_plural "%(num)s other quotes found: %(quotenums)s"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../Modules/Quotes.py:238
+#: ../Modules/Quotes.py:239
 msgid "Define your query !"
 msgstr ""
 
-#: ../Modules/Quotes.py:305
+#: ../Modules/Quotes.py:306
 msgid "the %y/%m/%d at %H:%M:%S"
 msgstr ""
 
-#: ../Modules/Quotes.py:306
+#: ../Modules/Quotes.py:307
 #, python-format
 msgid "Quote number %(qid)s added by %(author)s on %(date)s, on %(chan)s"
 msgstr ""
 
-#: ../Modules/Quotes.py:320 ../Modules/Quotes.py:330
+#: ../Modules/Quotes.py:321 ../Modules/Quotes.py:331
 #, python-format
 msgid "[%(qid)s] %(contents)s"
 msgstr ""
 
-#: ../Pythagore.py:171
+#: ../Pythagore.py:170
 #, python-format
 msgid "[disconnected at %s]"
 msgstr ""
 
-#: ../Pythagore.py:254
+#: ../Pythagore.py:253
 #, python-format
 msgid "-!- %(user)s has joined %(channel)s"
 msgstr ""
 
-#: ../Pythagore.py:271
+#: ../Pythagore.py:267
+#, python-format
+msgid "-!- %(user)s has left %(channel)s (%(reason)s)"
+msgstr ""
+
+#: ../Pythagore.py:279
 #, python-format
 msgid "-!- %(user)s has quit (%(quitMessage)s)"
 msgstr ""
 
-#: ../Pythagore.py:329
+#: ../Pythagore.py:337
 msgid "Error !"
 msgstr ""
 
-#: ../Pythagore.py:333
+#: ../Pythagore.py:341
 #, python-format
 msgid " See %(url)s for more information."
 msgstr ""
 
-#: ../Pythagore.py:382
+#: ../Pythagore.py:391
 #, python-format
 msgid "[I have joined %(channel)s]"
 msgstr ""
 
-#: ../Pythagore.py:388
+#: ../Pythagore.py:397
 #, python-format
 msgid "(%(user)s) %(msg)s"
 msgstr ""
 
-#: ../Pythagore.py:399
+#: ../Pythagore.py:408
 #, python-format
 msgid "* %(user)s %(action)s"
 msgstr ""
 
-#: ../Pythagore.py:515
+#: ../Pythagore.py:524
 msgid "connection failed: "
 msgstr ""
 

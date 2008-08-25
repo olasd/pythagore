@@ -11,7 +11,7 @@
 # This file is part of Pythagore.
 #
 # Pythagore is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License, version 2, as 
+# under the terms of the GNU General Public License, version 2, as
 # published by the Free Software Foundation.
 #
 # Pythagore is distributed in the hope it will be useful, but WITHOUT
@@ -19,7 +19,7 @@
 # of FITNESS FOR ANY PARTICULAR PURPOSE. See the GNU General Public
 # License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
@@ -53,12 +53,12 @@ class Admin(PythagoreModule):
     def die(self, channel, nick, msg):
         if nick in self.config["admins"]:
             reactor.stop()
-    
+
     def addChannel(self, channel, nick, msg):
         """Adds the channel to the bot database. The channel's encoding is given by a second argument."""
         if nick in self.config["admins"]:
             args = msg.split()
-           
+
             # We create a new channel whose name is the first argument
             newchannel = Channel(args[0].encode('UTF-8'))
             try:
@@ -73,12 +73,12 @@ class Admin(PythagoreModule):
             self.bot.session.save(newchannel)
             self.bot.session.commit()
             self.joinChannel(newchannel)
-    
+
     def enableChannel(self, channel, nick, msg):
         """Adds the channel to the bot database. The channel's encoding is given by a second argument."""
         if nick in self.config["admins"]:
             args = msg.split()
-           
+
             try:
                 newchannel = self.bot.session.query(Channel).filter(Channel.name==args[0].encode('UTF-8')).one()
             except sa.exceptions.InvalidRequestError:
@@ -87,11 +87,11 @@ class Admin(PythagoreModule):
             if not newchannel.enabled:
                 newchannel.enabled = True
                 newchannel.modules = list(set(newchannel.modules) | set(self.bot.session.query(Module).filter(sa.or_(Module.name=="Admin",Module.name=="Logger")).all()))
-        
+
                 self.bot.session.commit()
 
                 self.joinChannel(newchannel)
-    
+
     def joinChannel(self, newchannel):
         """This makes the bot join a channel"""
         if not isinstance(newchannel, Channel):
@@ -99,7 +99,7 @@ class Admin(PythagoreModule):
                 newchannel = self.bot.session.query(Channel).filter(Channel.name==newchannel).one()
             except sa.exceptions.InvalidRequestError:
                 return
-        
+
         # Now we're all set, we can join this channel after appending it to the bot's channel list
         self.bot.channels[newchannel.name] = newchannel
 

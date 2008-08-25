@@ -12,7 +12,7 @@
 # This file is part of Pythagore.
 #
 # Pythagore is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License, version 2, as 
+# under the terms of the GNU General Public License, version 2, as
 # published by the Free Software Foundation.
 #
 # Pythagore is distributed in the hope it will be useful, but WITHOUT
@@ -20,7 +20,7 @@
 # of FITNESS FOR ANY PARTICULAR PURPOSE. See the GNU General Public
 # License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
@@ -47,7 +47,7 @@ class Quotes(PythagoreModule):
         self.exports['quote'] = "getQuote"
         self.exports['randquote'] = "randomQuote"
         self.exports['findquote'] = "searchQuote"
-        
+
         self.qtable = sa.Table(self.config["qtable"], self.bot.metadata,
             sa.Column('qid', sa.Integer, primary_key=True),
             sa.Column('content', sa.Unicode(400)),
@@ -59,7 +59,7 @@ class Quotes(PythagoreModule):
         sao.mapper(Quote, self.qtable, properties={
             'channel': sao.relation(Channel),
             })
-        
+
         try:
             self.config['minWordsInQuotes']
         except:
@@ -112,7 +112,7 @@ class Quotes(PythagoreModule):
             self.bot.error(channel, _("Too few parameters."))
 
     def getQuote(self, channel, nick, msg):
-        """!quote <qid> 
+        """!quote <qid>
         Shows quote number <qid> in the current channel, if allowed"""
         if msg:
             words = msg.split()
@@ -137,7 +137,7 @@ class Quotes(PythagoreModule):
     def randomQuote(self, channel, nick, msg):
         """!randomquote [--all | --channel=#chan | -c=#chan]
         Shows a random quote from channel #chan, or from all channels, or by default from the current channel."""
-      
+
         all = False
         chan = channel
         if msg is not None:
@@ -149,7 +149,7 @@ class Quotes(PythagoreModule):
             else:
                 self.bot.error(channel, _("Incorrect parameters !"))
                 return
-        
+
         if all:
             try:
                 quotes = self.bot.session.query(Quote).join("channel").\
@@ -163,7 +163,7 @@ class Quotes(PythagoreModule):
                 self.bot.say(channel, _("No quote found !"))
                 return
             quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[channel].cid)
-        
+
         if quotes:
             numquotes = quotes.count()
             self.printQuoteToChan(channel, quotes[random.randint(0,numquotes-1)])
@@ -171,7 +171,7 @@ class Quotes(PythagoreModule):
             self.bot.say(channel, _("No quote found !"))
 
     def searchQuote(self, channel, nick, msg):
-        """!findquote [-all | -channel=#chan | -c=#chan] <query> 
+        """!findquote [-all | -channel=#chan | -c=#chan] <query>
         Searches a quote containing <query> from channel #chan, or from all channels, or from the current channel."""
         all = False
         chan = channel
@@ -183,9 +183,9 @@ class Quotes(PythagoreModule):
             elif words[0].startswith("-c=") or words[0].startswith("--channel="):
                 chan = words[0].split("=", 1)[1]
                 del words[0]
-                
+
             if len(''.join(words)) < self.config['minWordsInQuotes']:
- 
+
                 self.bot.say(channel, _("Quote too short !"))
                 return
 
@@ -208,7 +208,7 @@ class Quotes(PythagoreModule):
                 if channel != chan and not self.isPublicChannel(chan):
                     self.bot.say(channel, _("No quote found !"))
                     return
-                 
+
                 try:
                     quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).\
                                                             filter(Quote.cid == self.bot.channels[channel].cid).\
@@ -216,7 +216,7 @@ class Quotes(PythagoreModule):
                 except:
                     self.bot.say(channel, _("No quote found !"))
                     return
-            
+
             if quotes:
                 quotes.reverse()
                 quotenums = [str(quote.qid) for quote in quotes]
@@ -279,7 +279,7 @@ class Quotes(PythagoreModule):
             self.bot.say(channel, _("No quote found !"))
 
     def quoteInfo(self, channel, nick, msg):
-        """!quoteinfo <qid> 
+        """!quoteinfo <qid>
         Shows information about quote number <qid>"""
         if msg:
             try:
@@ -313,7 +313,7 @@ class Quotes(PythagoreModule):
 
     def printQuoteToChan(self, channel, quote):
         """Shows 'quote' object in the channel, if it exists and the channel is allowed to print the quote"""
-        
+
         if quote:
             if self.bot.channels[channel].cid == quote.cid or self.isPublicChannel(quote.cid):
                 self.bot.say(
@@ -322,7 +322,7 @@ class Quotes(PythagoreModule):
                     )
             else:
                 self.bot.say(channel, _("No quote found !"))
-    
+
     def printQuoteToNick(self, nick, quote):
         """Prints quote as a private message"""
         if quote:

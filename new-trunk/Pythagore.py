@@ -11,7 +11,7 @@
 # This file is part of Pythagore.
 #
 # Pythagore is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License, version 2, as 
+# under the terms of the GNU General Public License, version 2, as
 # published by the Free Software Foundation.
 #
 # Pythagore is distributed in the hope it will be useful, but WITHOUT
@@ -19,7 +19,7 @@
 # of FITNESS FOR ANY PARTICULAR PURPOSE. See the GNU General Public
 # License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
@@ -55,10 +55,10 @@ class IRCObserver:
     """
     Log observer sending traceback messages to IRC when available
     """
-    
+
     def __init__(self, pythagore):
         self.bot = pythagore
-        
+
         try:
             self.logchannel = self.bot.conf['debug_channel']
         except KeyError:
@@ -81,7 +81,7 @@ class IRCObserver:
 
 class PythagoreBot(irc.IRCClient):
     """A Pythagore IRC bot."""
-    
+
     def __init__(self, factory):
         # configuration, loaded at every connection
         configfile = file("Config" + os.sep + "Pythagore" + ".yml", 'r')
@@ -112,7 +112,7 @@ class PythagoreBot(irc.IRCClient):
                 self.available_modules[path.lower()] = path
 
         self.protected_modules = ('admin', 'logger')
-        
+
         self.message_rex = re.compile(r"""
                 ^ # beginning of line
                 ( # formatting
@@ -145,7 +145,7 @@ class PythagoreBot(irc.IRCClient):
 
     def connectionMade(self):
         """This function gets called whenever the bot gets connected to the network"""
-        self.logger = self.registerModule("Logger") 
+        self.logger = self.registerModule("Logger")
         irc.IRCClient.connectionMade(self)
         self.conn_t = time.time()
         self.registerModule("Admin")
@@ -206,7 +206,7 @@ class PythagoreBot(irc.IRCClient):
 
     def irc_RPL_NAMREPLY(self, prefix, params):
         """Handles answer to a /names query (for instance while joining a channel)"""
-        
+
         try:
             channel = self.channels[params[2]]
         except KeyError:
@@ -251,7 +251,7 @@ class PythagoreBot(irc.IRCClient):
         # The user has no mode
         self.channels[channel].usermodes[user] = ''
         self.logger.log(channel, _("-!- %(user)s has joined %(channel)s") % {'user': user, 'channel': self.u_(channel, channel)})
-    
+
     def irc_PART(self, prefix, params):
         nick = prefix.split('!')[0]
         channel = params[0]
@@ -259,7 +259,7 @@ class PythagoreBot(irc.IRCClient):
             self.left(channel)
         else:
             self.myUserLeft(nick, channel, ' '.join(params[1:]))
-    
+
     def myUserLeft(self, user, channel, reason):
         """This gets called when a user leaves a channel"""
         # The user is not in the channel anymore
@@ -330,11 +330,11 @@ class PythagoreBot(irc.IRCClient):
         """Sends 'message' to 'dest' limiting line length to 'length'"""
         if not isinstance(message, basestring):
             message = str(message)
-        
+
         message = self.to_encoding(message)
 
         irc.IRCClient.msg(self, dest, message, length)
-    
+
     def error(self, channel, message=_('Error !')):
         """Sends 'message' to 'channel' appending the URL to the bot's documentation"""
         self.say(
@@ -363,7 +363,7 @@ class PythagoreBot(irc.IRCClient):
 
     def join(self, channel):
         """This is called when the bot wants to join a channel. It loads all required modules if applicable"""
-        
+
         try:
             module_names = [module.name for module in self.channels[channel].modules]
         except KeyError:
@@ -380,7 +380,7 @@ class PythagoreBot(irc.IRCClient):
         """This is called for the bot to OPER up, using 'password' as password, and 'nick' as a nick if given."""
         if not nick:
             nick = self.conf["nick"]
-       
+
         self.sendLine('OPER %(nick)s %(password)s' % {'nick': nick, 'password': password})
         time.sleep(2)
         self.sendLine('MODE %s +Bp' % self.conf["nick"])
@@ -406,7 +406,7 @@ class PythagoreBot(irc.IRCClient):
         """This will get called when the bot sees someone do an action."""
         user = user.split('!', 1)[0]
         self.logger.log(channel, _("* %(user)s %(action)s") % {'user': user, 'action': self.u_(msg, channel)})
-    
+
     def kickedFrom(self, channel, kicker, message):
         """This gets called when the bot is kicked from a channel."""
         # try to rejoin channel
@@ -429,13 +429,13 @@ class PythagoreBot(irc.IRCClient):
         else:
             # this module doesn't exist ...
             return
-        
+
         # Calls Module.Module(pythagore), to create an instance of the class
         self.moduleinstances[modname] = getattr(
             self.modules[modname],
             modpath,
         )(self);
-       
+
         try:
             # We lookup the module name in the modules table
             module = self.session.query(Module).filter(Module.name==modname).one()
@@ -484,20 +484,20 @@ class PythagoreBotConnector(protocol.ClientFactory):
 
     def SQLInit(self):
         """This initializes the class mapping and connection to the database"""
-        
+
         self.engine = sa.create_engine(self.conf["db_uri"], echo=False, connect_args = {'use_unicode': True, 'charset': "utf8"})
         self.metadata = sa.MetaData()
         self.metadata.bind = self.engine
 
         Session = sao.sessionmaker(bind=self.engine, autoflush=True, transactional=True)
         self.session = Session()
-        self.tables["channels"] = sa.Table(self.conf["table_names"]["channels"], self.metadata, 
+        self.tables["channels"] = sa.Table(self.conf["table_names"]["channels"], self.metadata,
             sa.Column('cid', sa.Integer, primary_key=True),
             sa.Column('name', sa.String(60)),
             sa.Column('encoding', sa.String(60)),
             sa.Column('enabled', sa.Boolean),
             sa.Column('publicquotes', sa.Boolean))
-        
+
         self.tables["modules"]  = sa.Table(self.conf["table_names"]["modules"], self.metadata,
             sa.Column('mid', sa.Integer, primary_key=True),
             sa.Column('name', sa.String(60)))
@@ -509,7 +509,7 @@ class PythagoreBotConnector(protocol.ClientFactory):
         sao.mapper(Module, self.tables["modules"])
         sao.mapper(Channel, self.tables["channels"], properties={
             'modules': sao.relation(Module, secondary=self.tables["enabled_modules"])})
-        
+
         self.metadata.create_all()
 
 
@@ -529,9 +529,9 @@ def main():
     configfile = file("Config" + os.sep + "Pythagore" + ".yml", 'r')
     conf = yaml.safe_load(configfile)
     configfile.close()
-    
 
-    # Connection 
+
+    # Connection
     connector = PythagoreBotConnector(conf)
     reactor.connectTCP(conf["host"], conf["port"], connector)
     reactor.run()

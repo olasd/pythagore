@@ -11,7 +11,7 @@
 # This file is part of Pythagore.
 #
 # Pythagore is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License, version 2, as 
+# under the terms of the GNU General Public License, version 2, as
 # published by the Free Software Foundation.
 #
 # Pythagore is distributed in the hope it will be useful, but WITHOUT
@@ -19,7 +19,7 @@
 # of FITNESS FOR ANY PARTICULAR PURPOSE. See the GNU General Public
 # License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
@@ -34,12 +34,12 @@ class ChannelLogger:
         self.channel = channel
         self.interval = 60 * 60 * 24 #one day
         date = time.strftime("%Y_%m_%d", time.localtime(time.time()))
-        
+
         if(not os.path.lexists(conf['logdir'])):
             os.mkdir(self.conf['logdir'])
-        
+
         assert(os.path.isdir(conf['logdir']))
-        
+
         self.file = file("%s%s%s_%s.log" %
             (conf['logdir'], os.sep, channel, date), 'a+'
         )

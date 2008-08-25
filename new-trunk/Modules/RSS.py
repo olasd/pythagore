@@ -11,7 +11,7 @@
 # This file is part of Pythagore.
 #
 # Pythagore is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License, version 2, as 
+# under the terms of the GNU General Public License, version 2, as
 # published by the Free Software Foundation.
 #
 # Pythagore is distributed in the hope it will be useful, but WITHOUT
@@ -19,7 +19,7 @@
 # of FITNESS FOR ANY PARTICULAR PURPOSE. See the GNU General Public
 # License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
@@ -54,7 +54,7 @@ class RSS(PythagoreModule):
         #    sa.Column('name', sa.Unicode(60)),
         #    sa.Column('url', sa.Unicode(2000)))
         self.sel_ftable = sa.Table(self.config["selected_feeds_table"], self.bot.metadata, autoload=True)
-        
+
         sao.mapper(Feed, self.ftable, properties={
             'channels' : sao.relation(Channel, secondary=self.sel_ftable, backref='feeds')
         })
@@ -65,11 +65,11 @@ class RSS(PythagoreModule):
         except: self.cacheDir = self.config['cacheDir'] = '.'
         if os.path.exists(self.cacheDir) is None:
             os.mkdir(cacheDir)
-        try: self.interval = self.config['time_interval']           
+        try: self.interval = self.config['time_interval']
         except: self.interval = 10*60
 
         #Starts the reactor which processes feeds each self.interval seconds
-        main(self.cacheDir, self.ftable, self.sel_ftable, self.bot, self.interval)  
+        main(self.cacheDir, self.ftable, self.sel_ftable, self.bot, self.interval)
 
 
     def addRSS(self, channel, nick, msg):
@@ -93,7 +93,7 @@ class RSS(PythagoreModule):
         else:
             self.bot.error(channel, _("Too few parameters."))
 
-       
+
     def deleteRSS(self, channel, nick, msg):
         """A bot admin removes a RSS feed from the database.
         Format : !delrss <fid>"""
@@ -199,11 +199,11 @@ class RSS_HTTPConditionnalGet(client.HTTPPageGetter):
         # Receives normal RSS file, we update the 'last-modified' entry
         if self.headers.has_key('last-modified'):
             self.factory.modified(self.headers['last-modified'])
-    
+
     def handleStatus_304(self):
         # The feed has not been updated since last parsing, exiting connection...
         self.transport.loseConnection()
-    
+
 class RSS_HTTPConditionnalFactory(client.HTTPClientFactory):
     """Parent factory for RSS_HTTPConditionnalGet protocol"""
 
@@ -216,12 +216,12 @@ class RSS_HTTPConditionnalFactory(client.HTTPClientFactory):
         self.ftable = ftable
         self.sel_ftable = sel_ftable
         self.bot = bot
-        
+
         self.cacheFile = cacheDir+os.path.sep+self.getName(url)+".cache"
 
         # if cache file exists, we take the last-modified date to get the page
         # and then HTTPClientFactory makes the work for handleStatus to be called
-        # in function of headers 
+        # in function of headers
         if os.path.exists(self.cacheFile):
             last = open(self.cacheFile, 'r').readline().strip()
             if headers is not None:
@@ -236,13 +236,13 @@ class RSS_HTTPConditionnalFactory(client.HTTPClientFactory):
         file = open(self.cacheFile, 'w')
         file.write(lasmodified)
         file.close()
-    
+
     def getName(self, url):
         return self.bot.session.query(Feed).filter(Feed.url==url).one().fid
 
 def HTTPConditionnalGet(self, cacheDir, url, ftable, sel_ftable, bot, *args, **kwargs):
     #FIXME : i don't understand how to transmit informations obtained
-    #by 
+    #by
     scheme, host, port, path = client._parse(url)
     factory = RSS_HTTPConditionnalFactory(cacheDir, url, ftable, sel_ftable, bot, *args, **kwargs)
     reactor.connectTCP(host, port, factory)
@@ -258,7 +258,7 @@ class RSS_FeedProtocol(object):
     def start(self, feedsToParse, deferred):
         self.feeds = feedsToParse
         d = defer.succeed(self.succeed())
-        
+
         for feed in self.feeds.items:
             d.addCallback(self.condGet, feed[1])
             d.addErrback(self.error, _("getting page"))
@@ -280,7 +280,7 @@ class RSS_FeedProtocol(object):
                 if self.factory.previous_updated[fid] >= updated:
                     print "All up-to-date in feed number %s" % (fid)
                     break
-                # all should be put in a data structure of printed on concerned 
+                # all should be put in a data structure of printed on concerned
                 # channels (debug purpose...)
                 #curfeed = self.bot.session.query(Feed).filter(Feed.fid==fid).one():
                 #for channel in curfeed.channels:
@@ -298,7 +298,7 @@ class RSS_FeedProtocol(object):
     def error(self, traceback, args):
         print "Error while %(action)s : %(trace)s" % {'action': args, 'trace':traceback}
         print "Going on anyway..."
-    
+
 
 class RSS_FeedFactory(protocol.ClientFactory):
     protocol = RSS_FeedProtocol
@@ -311,7 +311,7 @@ class RSS_FeedFactory(protocol.ClientFactory):
         self.bot = bot
         self.interval = interval
         self.cacheDir = cacheDir
-        
+
         # FIXME : should be initialized with current time or something...
         # see parseFeed() in RSS_FeedProtocol
         self.previous_updated = {}

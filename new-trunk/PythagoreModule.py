@@ -11,7 +11,7 @@
 # This file is part of Pythagore.
 #
 # Pythagore is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License, version 2, as 
+# under the terms of the GNU General Public License, version 2, as
 # published by the Free Software Foundation.
 #
 # Pythagore is distributed in the hope it will be useful, but WITHOUT
@@ -19,7 +19,7 @@
 # of FITNESS FOR ANY PARTICULAR PURPOSE. See the GNU General Public
 # License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
@@ -38,14 +38,14 @@ class PythagoreModule:
         self.name = self.__class__.__name__
 
     def loadConfig(self):
-        """Configuration initialization. Override this if you do not want 
+        """Configuration initialization. Override this if you do not want
         plaintext config"""
         try:
             import yaml
         except:
             self.config = {}
             return
-        
+
         name = self.__class__.__name__
         try:
             configfile = file("Config" + os.sep + name + ".yml", 'r')
@@ -74,7 +74,7 @@ class PythagoreModule:
 class PythagoreModuleContainer:
     """This is the class that contains all Pythagore's modules. It emulates
     a dict so that an access to it returns a callback"""
-    
+
     def __init__(self):
         self.modules = {}
         self.moduleinstances = {}
@@ -86,12 +86,12 @@ class PythagoreModuleContainer:
             self.unregisterModule(modname)
         else:
             self.modules[modname] = __import__("Modules/%s" % modname)
-        
+
         self.moduleinstances[modname] = getattr(
             self.modules[modname],
             modname,
         )(self);
-        
+
         for i in self.moduleinstances[modname].exports:
             self.keywords[i] = getattr(
                     self.moduleinstances[modname],

@@ -27,17 +27,22 @@
 class NoCaseDict(dict):
     """A case-insensitive dictionnary, for use on IRC"""
     def __getitem__(self,key):
-        if isinstance(key, basestr):
+        if isinstance(key, basestring):
             key = key.lower()
         return self.__class__.__base__.__getitem__(self, key)
-    def __setitem__(self, key, value)
-        if isinstance(key, basestr):
+    def __setitem__(self, key, value):
+        if isinstance(key, basestring):
             key = key.lower()
         return self.__class__.__base__.__setitem__(self, key, value)
-    def __delitem__(self, key)
-        if isinstance(key, basestr):
+    def __delitem__(self, key):
+        if isinstance(key, basestring):
             key = key.lower()
         return self.__class__.__base__.__delitem__(self, key)
+    def __contains__(self, key):
+        if isinstance(key, basestring):
+            key = key.lower()
+        return self.__class__.__base__.__contains__(self, key)
+
 
 def to_unicode (txt, pray_enc_is="ISO8859-15"):
     if isinstance(txt, unicode):

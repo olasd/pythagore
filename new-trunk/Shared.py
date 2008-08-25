@@ -24,6 +24,20 @@
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+class NoCaseDict(dict):
+    """A case-insensitive dictionnary, for use on IRC"""
+    def __getitem__(self,key):
+        if isinstance(key, basestr):
+            key = key.lower()
+        return self.__class__.__base__.__getitem__(self, key)
+    def __setitem__(self, key, value)
+        if isinstance(key, basestr):
+            key = key.lower()
+        return self.__class__.__base__.__setitem__(self, key, value)
+    def __delitem__(self, key)
+        if isinstance(key, basestr):
+            key = key.lower()
+        return self.__class__.__base__.__delitem__(self, key)
 
 def to_unicode (txt, pray_enc_is="ISO8859-15"):
     if isinstance(txt, unicode):

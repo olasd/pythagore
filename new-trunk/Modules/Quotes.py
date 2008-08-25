@@ -162,7 +162,7 @@ class Quotes(PythagoreModule):
             if channel != chan and not self.isPublicChannel(chan):
                 self.bot.say(channel, _("No quote found !"))
                 return
-            quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[channel].cid)
+            quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[chan].cid)
 
         if quotes:
             numquotes = quotes.count()

@@ -166,7 +166,10 @@ class Quotes(PythagoreModule):
 
         if quotes:
             numquotes = quotes.count()
-            self.printQuoteToChan(channel, quotes[random.randint(0,numquotes-1)])
+            if numquotes != 0:
+                self.printQuoteToChan(channel, quotes[random.randint(0,numquotes-1)])
+            else:
+                self.bot.say(channel, _("No quote found !"))
         else:
             self.bot.say(channel, _("No quote found !"))
 

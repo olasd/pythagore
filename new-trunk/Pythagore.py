@@ -95,7 +95,7 @@ class PythagoreBot(irc.IRCClient):
         self.SQLInit ()
 
         self.modules = {}
-        self.channels = {}
+        self.channels = NoCaseDict()
         for channel in self.session.query(Channel).all():
             if channel.enabled:
                 self.channels[channel.name.encode('UTF-8')] = channel
@@ -214,7 +214,7 @@ class PythagoreBot(irc.IRCClient):
             return
 
         if not hasattr(channel, "usermodes"):
-            channel.usermodes = {}
+            channel.usermodes = NoCaseDict()
 
         users = params[3].split()
         for user in users:
@@ -280,17 +280,18 @@ class PythagoreBot(irc.IRCClient):
 
     def userRenamed(self, oldname, newname):
         """This gets called when a user changes name"""
-        for channel in self.channels:
-            try:
-                # We get his old mode
-                self.channels[channel].usermodes[newname] = self.channels[channel].usermodes[oldname]
-            except KeyError:
-                # The user was not there !
-                pass
-            else:
-                # Then we delete it
-                del self.channels[channel].usermodes[oldname]
-    
+        if oldname.lower() != newname.lower():
+            for channel in self.channels:
+                try:
+                    # We get his old mode
+                    self.channels[channel].usermodes[newname] = self.channels[channel].usermodes[oldname]
+                except KeyError:
+                    # The user was not there !
+                    pass
+                else:
+                    # Then we delete it
+                    del self.channels[channel].usermodes[oldname]
+
     def modeChanged(self, user, channel, set, modes, args):
         """This gets called when a user changes a mode in a channel"""
         # The multiple mode changes is badly handled, so what we do when a mode is changed is
@@ -344,7 +345,6 @@ class PythagoreBot(irc.IRCClient):
     def words_callback(self, word, channel, nick, msg):
         """This function is called when a message matches the pattern given by 'say'"""
         # We refresh the channel's configuration
-        channel = channel.lower()
         self.session.refresh(self.channels[channel])
         word = self.strip_formatting(word)
         if word in self.keywords and (self.keywords[word][1] in self.protected_modules or self.keywords[word][1] in self.channels[channel].modules):

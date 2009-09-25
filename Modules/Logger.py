@@ -6,7 +6,7 @@
 #
 # Logger.py : Logger Classes
 #
-# Copyright (C) 2007, 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2007-2009 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #

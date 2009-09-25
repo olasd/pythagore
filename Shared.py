@@ -7,7 +7,7 @@
 # Shared.py : shared utility classes and functions
 #
 # Copyright © 2008 Guillaume Seguin <guillaume@segu.in>
-# Copyright © 2008, 2009 Nicolas Danrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2008, 2009 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -24,6 +24,8 @@
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 """Shared.py: shared utilities"""
+
+import sqlalchemy as sa
 
 class NoCaseDict(dict):
     """A case-insensitive dictionnary, for use on IRC"""
@@ -44,9 +46,28 @@ class NoCaseDict(dict):
             key = key.lower()
         return super(NoCaseDict, self).__contains__(key)
 
+class SASession(object):
+    """Context Manager for clean SQLAlchemy session handling."""
+
+    def __init__(self, pythagore):
+        self.sess = pythagore.sessionmaker()
+    def __enter__(self):
+        return self.sess
+    def __exit__(self, exc_type, exc_val, tb):
+        if exc_type is None:
+            self.sess.commit()
+            self.sess.close()
+        else:
+            if isinstance(exc_type, sa.exceptions.SQLAlchemyError):
+                self.sess.rollback()
+                self.sess.close()
+                
+    
 
 def to_unicode(txt, should_be="UTF-8", may_be=("ISO8859-15",)):
     """Convert the txt object to a unicode object"""
+    if hasattr(txt, "__unicode__"):
+        return unicode(txt)
     if isinstance(txt, unicode):
         return txt
     else:

@@ -6,8 +6,8 @@
 #
 # Quotes.py : Quotes module for Pythagore bot
 #
-# Copyright (C) 2008 Nicolas Maître <nox@teepi.net>
-# Copyright (C) 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2008 Nicolas Maître <nox@teepi.net>
+# Copyright © 2008, 2009 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -62,7 +62,7 @@ class Quotes(PythagoreModule):
 
         try:
             self.config['minWordsInQuotes']
-        except:
+        except KeyError:
             self.config['minWordsInQuotes'] = 1
 
     def addQuote(self, channel, nick, msg):
@@ -75,9 +75,11 @@ class Quotes(PythagoreModule):
             return
         # s'il y a assez de mots dans la quote
         if len(words) >= int(self.config['minWordsInQuotes']):
-            newquote = Quote(nick, self.bot.u_(msg, channel), self.bot.channels[channel].cid)
-            self.bot.session.save(newquote)
-            self.bot.session.commit()
+            sess = self.bot.sessionmaker()
+            newquote = Quote(nick, self.bot.u_(msg, channel), self.bot.channels(channel).cid)
+            sess.add(newquote)
+            sess.commit()
+            sess.close()
             if newquote.qid is not None:
                 self.bot.say(channel, _("Quote number \002%(qid)s\002 added !") % {'qid': newquote.qid})
         else:
@@ -94,18 +96,23 @@ class Quotes(PythagoreModule):
                 except ValueError:
                     self.bot.error(channel, _("Argument should be a number !"))
                     return
+                sess = self.bot.sessionmaker()
                 try:
-                    quote = self.bot.session.query(Quote).filter(Quote.qid==id).one()
-                except sa.exceptions.InvalidRequestError:
+                    quote = sess.query(Quote).filter(Quote.qid==id).one()
+                except sa.exceptions.SQLAlchemyError:
                     self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
+                    sess.rollback()
+                    sess.close()
                 else:
                     #on vérifie que nick a le droit de l'enlever
                     if nick.lower() == quote.author.lower() or nick in self.config["admins"]:
                         quote.deleted = True
-                        self.bot.session.commit()
+                        sess.add(quote)
+                        sess.commit()
                         self.bot.say(channel, _("Quote number \002%(qid)s\002 deleted") % {'qid': quote.qid})
                     else:
                         self.bot.say(channel, _("You're not allowed to delete this quote !"))
+                sess.close()
             else:
                 self.bot.error(channel, _("Too many parameters."))
         else:
@@ -122,12 +129,18 @@ class Quotes(PythagoreModule):
                 except ValueError:
                     self.bot.error(channel, _("Argument should be a number !"))
                     return
-                try:
-                    quote = self.bot.session.query(Quote).filter(Quote.deleted==False).filter(Quote.qid==qid).one()
-                except sa.exceptions.InvalidRequestError:
-                    self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': qid})
-                    return
 
+                sess = self.bot.sessionmaker()
+                
+                try:
+                    quote = sess.query(Quote).filter(Quote.deleted==False).filter(Quote.qid==qid).one()
+                except sa.exceptions.SQLAlchemyError:
+                    self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': qid})
+                    sess.rollback()
+                    sess.close()
+                    return
+                sess.close()
+                
                 self.printQuoteToChan(channel, quote)
             else:
                 self.bot.error(channel, _("Too many parameters."))
@@ -150,19 +163,23 @@ class Quotes(PythagoreModule):
                 self.bot.error(channel, _("Incorrect parameters !"))
                 return
 
+        sess = self.bot.sessionmaker()
         if all:
             try:
-                quotes = self.bot.session.query(Quote).join("channel").\
+                quotes = sess.query(Quote).join("channel").\
                     filter(Quote.deleted == False).filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
-                                                                Quote.cid == self.bot.channels[channel].cid))
-            except:
+                                                                Quote.cid == self.bot.channels(channel).cid))
+            except sa.exceptions.SQLAlchemyError:
+                sess.rollback()
+                sess.close()
                 self.bot.say(channel, _("No quote found !"))
                 return
         else:
             if channel != chan and not self.isPublicChannel(chan):
                 self.bot.say(channel, _("No quote found !"))
                 return
-            quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels[chan].cid)
+            quotes = sess.query(Quote).filter(Quote.deleted == False).filter(Quote.cid == self.bot.channels(chan).cid)
+        sess.close()
 
         if quotes:
             numquotes = quotes.count()
@@ -196,14 +213,16 @@ class Quotes(PythagoreModule):
             toSearch = self.bot.u_(".+".join(words), channel)
 
 
+            sess = self.bot.sessionmaker()
             if all:
                 try:
-                    quotes = self.bot.session.query(Quote).\
-                        join("channel").filter(Quote.deleted == False).\
+                    quotes = sess.query(Quote).join("channel").filter(Quote.deleted == False).\
                                         filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
-                                                      Quote.cid == self.bot.channels[channel].cid)).\
+                                                      Quote.cid == self.bot.channels(channel).cid)).\
                                         filter(Quote.content.op('regexp')(toSearch)).all()
-                except:
+                except sa.exceptions.SQLAlchemyError:
+                    sess.rollback()
+                    sess.close()
                     self.bot.say(channel, _("No quote found !"))
                     return
 
@@ -213,12 +232,16 @@ class Quotes(PythagoreModule):
                     return
 
                 try:
-                    quotes = self.bot.session.query(Quote).filter(Quote.deleted == False).\
-                                                            filter(Quote.cid == self.bot.channels[channel].cid).\
+                    quotes = sess.query(Quote).filter(Quote.deleted == False).\
+                                                            filter(Quote.cid == self.bot.channels(channel).cid).\
                                                             filter(Quote.content.op('regexp')(toSearch)).all()
-                except:
+                except sa.exceptions.SQLAlchemyError:
+                    sess.rollback()
+                    sess.close()
                     self.bot.say(channel, _("No quote found !"))
                     return
+
+            sess.close()
 
             if quotes:
                 quotes.reverse()
@@ -234,8 +257,8 @@ class Quotes(PythagoreModule):
                     i+=1
                 if i < nbFound:
                     self.bot.msg(nick, ngettext("%(num)s other quote found: %(quotenums)s",
-                                                         "%(num)s other quotes found: %(quotenums)s",
-                                                         nbFound - 5) % {'num': nbFound-5, 'quotenums': ", ".join(quotenums[5:])})
+                                                "%(num)s other quotes found: %(quotenums)s",
+                                                nbFound - 5) % {'num': nbFound-5, 'quotenums': ", ".join(quotenums[5:])})
             else:
                 self.bot.say(channel, _("No quote found !"))
         else:
@@ -254,27 +277,29 @@ class Quotes(PythagoreModule):
             else:
                 self.bot.error(channel, _("Incorrect parameters !"))
                 return
+        sess = self.bot.sessionmaker()
         if all:
             try:
-                quote = self.bot.session.query(Quote).\
-                        join("channel").filter(Quote.deleted == False).\
+                quote = sess.query(Quote).join("channel").filter(Quote.deleted == False).\
                                         filter(sa.or_(self.bot.tables["channels"].c.publicquotes == True,
-                                                      Quote.cid == self.bot.channels[channel].cid)).\
+                                                      Quote.cid == self.bot.channels(channel).cid)).\
                                         order_by(Quote.qid.desc()).first()
-            except sa.exceptions.InvalidRequestError:
+            except sa.exceptions.SQLAlchemyError:
+                sess.rollback()
+                sess.close()
                 self.bot.say(channel, _("No quote found !"))
                 return
-
-
         else:
             try:
-                quote = self.bot.session.query(Quote).\
-                        filter(Quote.deleted == False).\
-                        filter(Quote.cid == self.bot.channels[channel].cid).\
+                quote = sess.query(Quote).filter(Quote.deleted == False).\
+                        filter(Quote.cid == self.bot.channels(channel).cid).\
                         order_by(Quote.qid.desc()).first()
-            except sa.exceptions.InvalidRequestError:
+            except sa.exceptions.SQLAlchemyError:
+                sess.rollback()
+                sess.close()
                 self.bot.say(channel, _("No quote found !"))
                 return
+        sess.close()
 
         if quote:
             self.printQuoteToChan(channel, quote)
@@ -290,22 +315,31 @@ class Quotes(PythagoreModule):
             except ValueError:
                 self.bot.error(channel, _("Argument should be a number !"))
                 return
+
+            sess = self.bot.sessionmaker()
+            
             try:
-                quote = self.bot.session.query(Quote).filter(Quote.deleted==False).filter(Quote.qid==id).one()
-            except sa.exceptions.InvalidRequestError:
+                quote = sess.query(Quote).filter(Quote.deleted==False).filter(Quote.qid==id).one()
+            except sa.exceptions.SQLAlchemyError:
+                sess.rollback()
+                sess.close()
                 self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
                 return
-
+            
+            sess.close()
             if quote:
+                sess = self.bot.sessionmaker()
                 try:
-                    quote_chan = self.bot.session.query(Channel).\
-                                    filter(Channel.cid==quote.cid).\
+                    quote_chan = sess.query(Channel).filter(Channel.cid==quote.cid).\
                                     filter(sa.or_(Channel.publicquotes==True,
-                                                  Channel.cid==self.bot.channels[channel].cid)).one()
-                except sa.exceptions.InvalidRequestError:
+                                                  Channel.cid==self.bot.channels(channel).cid)).one()
+                except sa.exceptions.SQLAlchemyError:
+                    sess.rollback()
+                    sess.close()
                     self.bot.say(channel, _("Quote number \002%(qid)s\002 doesn't exist !") % {'qid': id})
                     return
-                # strftime wants a bytesting, not an unicode object. Let's satisfy him.
+                sess.close()
+                # strftime wants a bytestring, not an unicode object. Let's satisfy him.
                 timestamp = unicode(quote.timestamp.strftime(_("the %y/%m/%d at %H:%M:%S").encode('UTF-8')), 'UTF-8')
                 self.bot.say(channel, _("Quote number \002%(qid)s\002 added by %(author)s on %(date)s, on %(chan)s") %
                         {'qid': quote.qid,'author': quote.author, 'date': timestamp, 'chan': quote_chan.name})
@@ -318,7 +352,7 @@ class Quotes(PythagoreModule):
         """Shows 'quote' object in the channel, if it exists and the channel is allowed to print the quote"""
 
         if quote:
-            if self.bot.channels[channel].cid == quote.cid or self.isPublicChannel(quote.cid):
+            if self.bot.channels(channel).cid == quote.cid or self.isPublicChannel(quote.cid):
                 self.bot.say(
                     channel,
                     _("[\002%(qid)s\002] %(contents)s") % {'qid': quote.qid, 'contents': self.bot.u_(quote.content, channel)}
@@ -337,14 +371,13 @@ class Quotes(PythagoreModule):
     def isPublicChannel(self, channel):
         """Checks if 'channel' is a public channel"""
         if isinstance(channel, basestring):
-            try:
-                chan = self.bot.channels[channel]
-            except KeyError:
-                return False
+            ch = self.bot.channels(str(channel))
         else:
-            try:
-                chan = self.bot.session.query(Channel).filter(Channel.cid==channel).one()
-            except sa.exceptions.InvalidRequestError:
-                return False
-        return chan.publicquotes
+            sess = self.bot.sessionmaker()
+            ch = sess.query(Channel).filter(Channel.cid == channel).one()
+            sess.close()
+        try:
+            return ch.publicquotes
+        except AttributeError:
+            return False
 

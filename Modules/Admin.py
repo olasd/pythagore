@@ -6,7 +6,7 @@
 #
 # Admin.py : Administration module for Pythagore bot
 #
-# Copyright (C) 2007, 2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2007-2009 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -23,13 +23,17 @@
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+from __future__ import with_statement
+
 import sys, time
 
 from PythagoreModule import PythagoreModule
 from twisted.internet import reactor
 import sqlalchemy as sa
+import sqlalchemy.orm as sao
 
-from Mapped import Channel,Module
+from Mapped import Channel, Module
+from Shared import SASession
 
 class Admin(PythagoreModule):
     def __init__(self, pythagore):
@@ -68,43 +72,41 @@ class Admin(PythagoreModule):
                 pass
 
             # We enable the Admin and Logger modules for this channel
-            newchannel.modules = self.bot.session.query(Module).filter(sa.or_(Module.name=="Admin",Module.name=="Logger")).all()
-
-            self.bot.session.save(newchannel)
-            self.bot.session.commit()
+            with SASession(self.bot) as sess:
+                sess.add(newchannel)
+                newchannel.modules = sess.query(Module).filter(sa.or_(Module.name=="Admin",
+                                                                      Module.name=="Logger")).all()
+                
             self.joinChannel(newchannel)
 
     def enableChannel(self, channel, nick, msg):
-        """Adds the channel to the bot database. The channel's encoding is given by a second argument."""
+        """Enable the channel in the bot's database. Loads all necessary modules."""
         if nick in self.config["admins"]:
             args = msg.split()
 
             try:
-                newchannel = self.bot.session.query(Channel).filter(Channel.name==args[0].encode('UTF-8')).one()
-            except sa.exceptions.InvalidRequestError:
-                return
-
-            if not newchannel.enabled:
-                newchannel.enabled = True
-                newchannel.modules = list(set(newchannel.modules) | set(self.bot.session.query(Module).filter(sa.or_(Module.name=="Admin",Module.name=="Logger")).all()))
-
-                self.bot.session.commit()
-
-                self.joinChannel(newchannel)
+                with SASession(self.bot) as sess:
+                    newchannel = sess.query(Channel).filter(Channel.name==args[0].encode('UTF-8')).one()
+                    if not newchannel.enabled:
+                        newchannel.enabled = True
+                        newchannel.modules = list(set(newchannel.modules) |
+                                                  set(sess.query(Module).filter(sa.or_(Module.name=="Admin",
+                                                                                   Module.name=="Logger")).all()))
+            except sao.exc.NoResultFound:
+                self.bot.say(channel, _("%(channel)s not found!") % {"channel": args[0]})
+            else:
+                self.joinChannel(args[0])
+            
 
     def joinChannel(self, newchannel):
         """This makes the bot join a channel"""
         if not isinstance(newchannel, Channel):
-            try:
-                newchannel = self.bot.session.query(Channel).filter(Channel.name==newchannel).one()
-            except sa.exceptions.InvalidRequestError:
-                return
+            with SASession(self.bot) as sess:
+                newchannel = sess.query(Channel).filter(Channel.name==newchannel).one()
 
-        # Now we're all set, we can join this channel after appending it to the bot's channel list
-        self.bot.channels[newchannel.name] = newchannel
-
-        print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time() ,'channel': newchannel.name}
-        self.bot.join(newchannel.name)
+                # Now we're all set, we can join this channel
+                print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time() ,'channel': newchannel.name}
+                self.bot.join(newchannel.name)
 
     def enableModule(self, channel, nick, msg):
         """Enables the given module in the channel."""
@@ -114,17 +116,23 @@ class Admin(PythagoreModule):
             except AttributeError:
                 self.bot.error(channel, _("Too few parameters."))
             else:
+                chan, sess = self.bot.channels(channel, True)
                 try:
-                    module = self.bot.session.query(Module).filter(Module.name==modulename).one()
-                except sa.exceptions.InvalidRequestError:
+                    module = sess.query(Module).filter(Module.name == modulename).one()
+                except sa.exceptions.SQLAlchemyError:
                     self.bot.error(channel, _("No such module %(module)s") % {'module': modulename})
+                    sess.rollback()
+                    sess.close()
                 else:
-                    if module not in self.bot.channels[channel].modules:
+                    if module not in chan.modules:
                         self.bot.say(channel, _("Enabling module %(module)s") % {'module': modulename})
-                        self.bot.channels[channel].modules.append(module)
-                        self.bot.session.commit()
+                        chan.modules.append(module)
+                        sess.commit()
                     if modulename not in self.bot.modules:
                         self.bot.modules.register(modulename)
+                sess.close()
+        else:
+            print "badabrotch"
 
     def disableModule(self, channel, nick, msg):
         """Disables the given module in the channel."""
@@ -134,17 +142,21 @@ class Admin(PythagoreModule):
             except AttributeError:
                 self.bot.error(channel, _("Too few parameters."))
             else:
+                chan, sess = self.bot.channels(channel, True)
                 try:
                     if modulename in self.bot.modules.protected:
                         raise DisableProtectedModule
-                    module = self.bot.session.query(Module).filter(Module.name==modulename).one()
-                except (sa.exceptions.InvalidRequestError, DisableProtectedModule):
+                    module = sess.query(Module).filter(Module.name==modulename).one()
+                except (sa.exceptions.SQLAlchemyError, DisableProtectedModule):
                     self.bot.error(channel, _("No such module %(module)s") % {'module': modulename})
+                    sess.rollback()
+                    sess.close()
                 else:
-                    if module in self.bot.channels[channel].modules:
+                    if module in chan.modules:
                         self.bot.say(channel, _("Disabling module %(module)s") % {'module': modulename})
-                        self.bot.channels[channel].modules.remove(module)
-                        self.bot.session.commit()
+                        chan.modules.remove(module)
+                        sess.commit()
+                sess.close()
 
 class DisableProtectedModule(Exception):
     """Exception raised when someone tries to disable a protected module"""

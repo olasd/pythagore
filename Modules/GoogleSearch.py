@@ -6,7 +6,7 @@
 #
 # GoogleSearch.py : Google Search class for Pythagore bot
 #
-# Copyright (C) 2007 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2007 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #

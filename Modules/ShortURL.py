@@ -6,7 +6,7 @@
 #
 # ShortURL.py : URL shorting module for Pythagore bot
 #
-# Copyright (C) 2008 Nicolas Maître <nox@teepi.net>
+# Copyright © 2008 Nicolas Maître <nox@teepi.net>
 #
 # This file is part of Pythagore.
 #

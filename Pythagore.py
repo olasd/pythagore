@@ -6,7 +6,7 @@
 #
 # Pythagore.py : main IRC Bot Classes
 #
-# Copyright (C) 2007,2008 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2007-2009 Nicolas Dandrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -28,6 +28,7 @@ import re
 
 # system imports
 import time, os
+import pprint
 
 # twisted imports
 from twisted.words.protocols import irc
@@ -129,14 +130,15 @@ class PythagoreModules(object):
             modpath,
         )(self.pythagore)
 
+        sess = self.pythagore.sessionmaker()
         try:
             # We lookup the module name in the modules table
-            module = self.pythagore.session.query(Module).filter(Module.name==modname).one()
-        except sa.exceptions.InvalidRequestError:
-            # If this exception, zero or two rows have been returned. We hope it's zero...
+            module = sess.query(Module).filter(Module.name==modname).one()
+        except sa.exceptions.SQLAlchemyError:
             module = Module(modname)
-            self.pythagore.session.save(module)
-            self.pythagore.session.commit()
+            sess.add(module)
+            sess.commit()
+        sess.close()
 
         # We register all the symbols in the lookup table, which looks like :
         # {
@@ -178,10 +180,7 @@ class PythagoreBot(irc.IRCClient):
         self.SQLInit ()
 
         self.modules = PythagoreModules(self)
-        self.channels = NoCaseDict()
-        for channel in self.session.query(Channel).all():
-            if channel.enabled:
-                self.channels[channel.name.encode('UTF-8')] = channel
+        self.usermodes = NoCaseDict()
         self.prefixes = {}
 
         self.message_rex = re.compile(r"""
@@ -207,12 +206,51 @@ class PythagoreBot(irc.IRCClient):
                 |\x0f                          # reset formatting
                )""", re.UNICODE | re.VERBOSE)
 
+    def channels(self, channel_name = None, session = False):
+        """Query the database for a channel with the given name, or
+        all channels. Returns the channel(s), or a (channel(s),
+        session) tuple if asked"""
+
+        sess = self.sessionmaker()
+        if channel_name is not None:
+            try:
+                channel = sess.query(Channel).filter(Channel.name == channel_name).one()
+            except sa.exceptions.SQLAlchemyError:
+                sess.rollback()
+                sess.close()
+                if session:
+                    return None, None
+                else:
+                    return None
+            else:
+                if session:
+                    return channel, sess
+                else:
+                    sess.close()
+                    return channel
+        else:
+            try:
+                channels = sess.query(Channel).all()
+            except sa.exceptions.SQLAlchemyError:
+                sess.rollback()
+                sess.close()
+                if session:
+                    return None, None
+                else:
+                    return None
+            else:
+                if session:
+                    return channels, sess
+                else:
+                    sess.close()
+                    return channels
+
     def SQLInit(self):
         """This function sets up the convenience pointers to SQL objects from the factory"""
         self.engine = self.factory.engine
         self.metadata = self.factory.metadata
         self.tables = self.factory.tables
-        self.session = self.factory.session
+        self.sessionmaker = self.factory.sessionmaker
 
     def connectionMade(self):
         """This function gets called whenever the bot gets connected to the network"""
@@ -242,25 +280,13 @@ class PythagoreBot(irc.IRCClient):
         self.logger.close()
         self.observer.stop()
 
-    # This function (c) Frédéric Pauget, released under GPLv2.
     def to_encoding(self, txt, enc="ISO8859-15"):
         """Returns the text 'txt', safely encoded to the encoding 'enc', by guessing the source encoding"""
-        if isinstance(txt, unicode):
-            return txt.encode(enc)
-        else:
-            try:
-                # We suppose the text is UTF-8
-                return txt.decode("UTF-8").encode(enc)
-            except UnicodeDecodeError:
-                # else we assume (hope ?) it is ISO8859-15
-                return txt.decode("ISO8859-15").encode(enc)
+        return to_unicode(txt).encode(enc)
 
     def to_unicode_with_channel_enc(self, txt, channel):
         """Tries to decode the string txt into an unicode object, trying channel encoding"""
-        try:
-            enc = self.channels[channel].encoding
-        except KeyError:
-            enc = "ISO8859-15"
+        enc = getattr(self.channels(channel), 'encoding', 'ISO-8859-15')
 
         return to_unicode(txt, 'UTF-8', (enc, 'ISO-8859-15'))
 
@@ -278,21 +304,18 @@ class PythagoreBot(irc.IRCClient):
         """Handles answer to a /names query (for instance while joining a channel)"""
 
         try:
-            channel = self.channels[params[2]]
+            channelmodes = self.usermodes[params[2]]
         except KeyError:
-            # The channel isn't in the bot's database... WTF ?
-            return
-
-        if not hasattr(channel, "usermodes"):
-            channel.usermodes = NoCaseDict()
+            channelmodes = NoCaseDict()
+            self.usermodes[params[2]] = channelmodes
 
         users = params[3].split()
         for user in users:
             try:
-                channel.usermodes[user[1:]] = self.prefixes[user[0]]
+                channelmodes[user[1:]] = self.prefixes[user[0]]
             except KeyError:
                 # The prefix is unknown, so we presume the user has no special mode.
-                channel.usermodes[user] = ''
+                channelmodes[user] = ''
 
     def irc_RPL_BOUNCE(self, prefix, params):
         """Handles the server capabilities message"""
@@ -319,7 +342,7 @@ class PythagoreBot(irc.IRCClient):
     def userJoined(self, user, channel):
         """This gets called when a user joins a channel"""
         # The user has no mode
-        self.channels[channel].usermodes[user] = ''
+        self.usermodes[channel][user] = ''
         self.logger.log(channel, _("-!- %(user)s has joined %(channel)s") % {'user': user, 'channel': self.u_(channel, channel)})
 
     def irc_PART(self, prefix, params):
@@ -333,15 +356,16 @@ class PythagoreBot(irc.IRCClient):
     def myUserLeft(self, user, channel, reason):
         """This gets called when a user leaves a channel"""
         # The user is not in the channel anymore
-        del self.channels[channel].usermodes[user]
+        del self.usermodes[channel][user]
         self.logger.log(channel, _("-!- %(user)s has left %(channel)s (%(reason)s)") %  {'user': user, 'channel': self.u_(channel, channel), 'reason': reason})
 
     def userQuit(self, user, quitMessage):
         """This gets called when a user quits the network"""
         # The user is not in the channel anymore
-        for channel in self.channels:
+        for channel in self.channels():
+            channel = str(channel)
             try:
-                del self.channels[channel].usermodes[user]
+                del self.usermodes[channel][user]
             except KeyError:
                 # The user was not in this channel.
                 pass
@@ -351,16 +375,17 @@ class PythagoreBot(irc.IRCClient):
     def userRenamed(self, oldname, newname):
         """This gets called when a user changes name"""
         if oldname.lower() != newname.lower():
-            for channel in self.channels:
+            for channel in self.channels():
+                channel = str(channel)
                 try:
                     # We get his old mode
-                    self.channels[channel].usermodes[newname] = self.channels[channel].usermodes[oldname]
+                    self.usermodes[channel][newname] = self.usermodes[channel][oldname]
                 except KeyError:
                     # The user was not there !
                     pass
                 else:
                     # Then we delete it
-                    del self.channels[channel].usermodes[oldname]
+                    del self.usermodes[channel][oldname]
 
     def modeChanged(self, user, channel, set, modes, args):
         """This gets called when a user changes a mode in a channel"""
@@ -374,13 +399,8 @@ class PythagoreBot(irc.IRCClient):
     def isOp(self, channel, user, modes='qaoh'):
         """This function returns True if 'user' has one of the 'modes' in 'channel'"""
         try:
-            mode = channel.usermodes[user]
-        except AttributeError:
-            try:
-                mode = self.channels[channel].usermodes[user]
-            except IndexError:
-                raise
-        except:
+            mode = self.usermodes[channel][user]
+        except IndexError:
             mode = ''
 
         return mode is not '' and mode in modes
@@ -392,7 +412,12 @@ class PythagoreBot(irc.IRCClient):
         if not isinstance(message, basestring):
             message = str(message)
 
-        message = self.to_encoding(message, enc=self.channels[channel].encoding)
+        encoding = "ISO-8859-15"
+        chobj = self.channels(channel)
+        if chobj:
+            encoding = chobj.encoding
+
+        message = self.to_encoding(message, enc=encoding)
 
         irc.IRCClient.msg(self, channel, message, length)
 
@@ -415,31 +440,41 @@ class PythagoreBot(irc.IRCClient):
     def words_callback(self, word, channel, nick, msg):
         """This function is called when a message matches the pattern given by 'say'"""
         # We refresh the channel's configuration
-        self.session.refresh(self.channels[channel])
+        chanobj, sess = self.channels(channel, True)
+        if not sess:
+            self.error(channel, _("Database error!"))
+            return False
         word = self.strip_formatting(word)
         if word in self.modules.keywords:
-            method, modulename = self.modules.keywords[word]
-            if modulename in self.modules.protected or modulename in self.channels[channel].modules:
+            method, module = self.modules.keywords[word]
+            sess.add(module)
+            if module.name in self.modules.protected or module in chanobj.modules:
                 if msg:
                     msg = self.u_(msg, channel)
                 method(channel, nick, msg)
+                sess.close()
                 return True
+        sess.close()
         return False
 
     def signedOn(self):
         """Called when bot has succesfully signed on to server."""
-        for channel in self.channels:
-            print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time(),'channel': self.u_(channel, channel)}
-            self.join(channel)
+        for channel in self.channels():
+            if channel.enabled:
+                print _("[%(timestamp)s] joining %(channel)s") % {'timestamp': time.time(),'channel': self.u_(channel, channel)}
+                self.join(channel)
 
     def join(self, channel):
         """This is called when the bot wants to join a channel. It loads all required modules if applicable"""
 
+        sess = self.sessionmaker()
         try:
-            module_names = [module.name for module in self.channels[channel].modules]
+            sess.add(channel)
+            module_names = [module.name for module in channel.modules]
+            sess.close()
         except KeyError:
             # Channel not found, we don't load any modules
-            pass
+            sess.close()
         else:
             for module in module_names:
                 if module not in self.modules:
@@ -504,8 +539,7 @@ class PythagoreBotConnector(protocol.ClientFactory):
         self.metadata = sa.MetaData()
         self.metadata.bind = self.engine
 
-        Session = sao.sessionmaker(bind=self.engine, autoflush=True, transactional=True)
-        self.session = Session()
+        self.sessionmaker = sao.sessionmaker(bind=self.engine)
         self.tables["channels"] = sa.Table(self.conf["table_names"]["channels"], self.metadata,
             sa.Column('cid', sa.Integer, primary_key=True),
             sa.Column('name', sa.String(60)),
@@ -529,7 +563,7 @@ class PythagoreBotConnector(protocol.ClientFactory):
 
 
     def buildProtocol(self, addr):
-        return PythagoreBot (self)
+        return PythagoreBot(self)
 
     def clientConnectionLost(self, connector, reason):
         """If we got disconnected, reconnect to server."""
@@ -541,7 +575,7 @@ class PythagoreBotConnector(protocol.ClientFactory):
 
 def main():
     # Configuration, which is loaded once here, and reloaded each time the bot connects
-    configfile = file("Config" + os.sep + "Pythagore" + ".yml", 'r')
+    configfile = file(os.path.join("Config", "Pythagore" + ".yml"), 'r')
     conf = yaml.safe_load(configfile)
     configfile.close()
 

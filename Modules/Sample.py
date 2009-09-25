@@ -6,7 +6,7 @@
 #
 # Filename.py : module for Pythagore bot
 #
-# Copyright (C) 2008 Author <Author@example.org>
+# Copyright © 2008 Author <Author@example.org>
 #
 # This file is part of Pythagore.
 #

@@ -23,25 +23,26 @@
 # You should have received a copy of the GNU General Public License
 # along with Pythagore; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+"""Shared.py: shared utilities"""
 
 class NoCaseDict(dict):
     """A case-insensitive dictionnary, for use on IRC"""
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         if isinstance(key, basestring):
             key = key.lower()
-        return self.__class__.__base__.__getitem__(self, key)
+        return super(NoCaseDict, self).__getitem__(key)
     def __setitem__(self, key, value):
         if isinstance(key, basestring):
             key = key.lower()
-        return self.__class__.__base__.__setitem__(self, key, value)
+        return super(NoCaseDict, self).__setitem__(key, value)
     def __delitem__(self, key):
         if isinstance(key, basestring):
             key = key.lower()
-        return self.__class__.__base__.__delitem__(self, key)
+        return super(NoCaseDict, self).__delitem__(key)
     def __contains__(self, key):
         if isinstance(key, basestring):
             key = key.lower()
-        return self.__class__.__base__.__contains__(self, key)
+        return super(NoCaseDict, self).__contains__(key)
 
 
 def to_unicode (txt, pray_enc_is="ISO8859-15"):

@@ -26,7 +26,7 @@
 import time, os
 
 from PythagoreModule import PythagoreModule
-from Shared import *
+from Shared import to_unicode
 
 class ChannelLogger:
     def __init__(self, conf, channel):
@@ -61,7 +61,7 @@ class ChannelLogger:
             self.roll()
         t = time.localtime(int(current_time))
         timestamp = time.strftime(_("[%H:%M:%S]"), time.localtime(time.time()))
-        msg = _("%(timestamp)s %(message)s\n") % {'timestamp': timestamp, 'message': e_(message)}
+        msg = _("%(timestamp)s %(message)s\n") % {'timestamp': timestamp, 'message': to_unicode(message)}
         self.file.write(msg.encode("UTF-8"))
         self.file.flush()
 

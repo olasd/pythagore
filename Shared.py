@@ -6,8 +6,8 @@
 #
 # Shared.py : shared utility classes and functions
 #
-# Copyright (C) 2008 Guillaume Seguin <guillaume@segu.in>
-# Copyright (C) 2008 Nicolas Danrimont <Nicolas.Dandrimont@crans.org>
+# Copyright © 2008 Guillaume Seguin <guillaume@segu.in>
+# Copyright © 2008, 2009 Nicolas Danrimont <Nicolas.Dandrimont@crans.org>
 #
 # This file is part of Pythagore.
 #
@@ -45,20 +45,23 @@ class NoCaseDict(dict):
         return super(NoCaseDict, self).__contains__(key)
 
 
-def to_unicode (txt, pray_enc_is="ISO8859-15"):
+def to_unicode(txt, should_be="UTF-8", may_be=("ISO8859-15",)):
+    """Convert the txt object to a unicode object"""
     if isinstance(txt, unicode):
         return txt
     else:
         try:
-            # We suppose the text is UTF-8
-            return txt.decode("UTF-8")
+            # We suppose the text is in the "should_be" encoding
+            return txt.decode(should_be)
         except UnicodeDecodeError:
-            # else we assume (hope ?) it is pray_enc_is
-            try:
-                return txt.decode(pray_enc_is)
-            except UnicodeDecodeError:
+            # else we try all encodings in "may_be"
+            for encoding in may_be:
+                try:
+                    return txt.decode(encoding)
+                except UnicodeDecodeError:
+                    continue
+            else:
                 # We don't know what to do, so we go for a failproof solution
-                print repr(txt), " <- decoding failed with enc:%s" % pray_enc_is
+                print ("%r <- decoding failed with encodings "
+                       "%s and %s") % txt, should_be, ','.join(may_be)
                 return repr(txt).decode()
-
-e_ = to_unicode

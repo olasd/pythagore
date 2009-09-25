@@ -48,8 +48,7 @@ import yaml
 # Mapped objects
 from Mapped import Channel, Module
 
-from Shared import *
-
+from Shared import NoCaseDict, to_unicode
 
 class IRCObserver(object):
     """
@@ -263,7 +262,7 @@ class PythagoreBot(irc.IRCClient):
         except KeyError:
             enc = "ISO8859-15"
 
-        return to_unicode(txt, enc)
+        return to_unicode(txt, 'UTF-8', (enc, 'ISO-8859-15'))
 
     u_ = to_unicode_with_channel_enc
 
@@ -347,7 +346,7 @@ class PythagoreBot(irc.IRCClient):
                 # The user was not in this channel.
                 pass
             else:
-                self.logger.log(channel, _("-!- %(user)s has quit (%(quitMessage)s)") % {'user': user, 'quitMessage': e_(quitMessage)})
+                self.logger.log(channel, _("-!- %(user)s has quit (%(quitMessage)s)") % {'user': user, 'quitMessage': to_unicode(quitMessage)})
 
     def userRenamed(self, oldname, newname):
         """This gets called when a user changes name"""
@@ -466,7 +465,7 @@ class PythagoreBot(irc.IRCClient):
         """This will get called when the bot receives a message."""
         # 'user' has the form 'nickname!username@host'
         user = user.split('!', 1)[0]
-        str = _("(%(user)s) %(msg)s") % {'user': e_(user), 'msg': self.u_(msg, channel)}
+        str = _("(%(user)s) %(msg)s") % {'user': to_unicode(user), 'msg': self.u_(msg, channel)}
         self.logger.log(channel, str)
         # The message may be one of the bot's commands if it contains ! as one of its characters
         if '!' in msg:

@@ -44,11 +44,11 @@ class Admin(PythagoreModule):
 
     def loadModule(self, channel, nick, msg):
         if nick in self.config["admins"]:
-            self.bot.registerModule(msg)
+            self.bot.modules.register(msg)
 
     def unloadModule(self, channel, nick, msg):
         if nick in self.config["admins"]:
-            self.bot.unregisterModule(msg)
+            self.bot.modules.unregister(msg)
 
     def die(self, channel, nick, msg):
         if nick in self.config["admins"]:
@@ -124,7 +124,7 @@ class Admin(PythagoreModule):
                         self.bot.channels[channel].modules.append(module)
                         self.bot.session.commit()
                     if modulename not in self.bot.modules:
-                        self.bot.registerModule(modulename)
+                        self.bot.modules.register(modulename)
 
     def disableModule(self, channel, nick, msg):
         """Disables the given module in the channel."""
@@ -135,7 +135,7 @@ class Admin(PythagoreModule):
                 self.bot.error(channel, _("Too few parameters."))
             else:
                 try:
-                    if modulename in self.bot.protected_modules:
+                    if modulename in self.bot.modules.protected:
                         raise DisableProtectedModule
                     module = self.bot.session.query(Module).filter(Module.name==modulename).one()
                 except (sa.exceptions.InvalidRequestError, DisableProtectedModule):

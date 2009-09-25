@@ -82,6 +82,87 @@ class IRCObserver(object):
         """Stop the logger"""
         log.removeObserver(self._emit)
 
+class PythagoreModules(object):
+    """Container class for Pythagore's modules"""
+    def __init__(self, pythagore):
+        self.pythagore = pythagore
+        self.available = NoCaseDict()
+        for path in os.listdir('Modules'):
+            if path.lower().endswith('.py'):
+                # strip ending '.py'
+                path = path[:-3]
+                # populate dict
+                self.available[path.lower()] = path
+        self.protected = NoCaseDict(admin = True, logger = True)
+        self.instances = NoCaseDict()
+        self.dict = NoCaseDict()
+        self.keywords = NoCaseDict()
+
+    def __contains__(self, key):
+        return key in self.dict
+
+    def __setitem__(self, key, value):
+        self.dict[key] = value
+
+    def __getitem__(self, key):
+        return self.dict[key]
+
+    def register(self, modname):
+        """This registers a module. When it is already loaded, the
+        module is first unloaded to refresh its symbols."""
+        if modname in self:
+            modpath = self.available[modname]
+            # Module already there, let's reload it
+            self[modname] = reload(self[modname])
+            # and clean its symbols
+            self.unregister(modname)
+        elif modname in self.available:
+            modpath = self.available[modname]
+            # Module not there, let's import it
+            self[modname] = __import__("Modules/%s" % modpath)
+        else:
+            # this module doesn't exist ...
+            return
+
+        # Calls Module.Module(pythagore), to create an instance of the class
+        self.instances[modname] = getattr(
+            self[modname],
+            modpath,
+        )(self.pythagore)
+
+        try:
+            # We lookup the module name in the modules table
+            module = self.pythagore.session.query(Module).filter(Module.name==modname).one()
+        except sa.exceptions.InvalidRequestError:
+            # If this exception, zero or two rows have been returned. We hope it's zero...
+            module = Module(modname)
+            self.pythagore.session.save(module)
+            self.pythagore.session.commit()
+
+        # We register all the symbols in the lookup table, which looks like :
+        # {
+        #   'keyword': (Module.Module.keyword_function, 'Module'),
+        #   ...
+        # }
+        for callname, function in self.instances[modname].exports.items():
+            self.keywords[callname] = (getattr(
+                    self.instances[modname],
+                    function
+                    ), module)
+
+        # We return the class instance, as a convenience for the Logger class
+        return self.instances[modname]
+
+    def unregister(self, modname):
+        """This unregisters a module, by removing its symbols from the
+        lookup table, and the corresponding Class instance"""
+        modname = modname.lower()
+        if modname in self.instances and modname not in self.protected:
+            for export in self.instances[modname].exports:
+                if self.keywords[export][1] == modname:
+                    del self.keywords[export]
+            del self.instances[modname]
+        
 class PythagoreBot(irc.IRCClient):
     """A Pythagore IRC bot."""
 
@@ -97,24 +178,12 @@ class PythagoreBot(irc.IRCClient):
         self.factory = factory
         self.SQLInit ()
 
-        self.modules = {}
+        self.modules = PythagoreModules(self)
         self.channels = NoCaseDict()
         for channel in self.session.query(Channel).all():
             if channel.enabled:
                 self.channels[channel.name.encode('UTF-8')] = channel
-        self.moduleinstances = {}
-        self.keywords = {}
         self.prefixes = {}
-
-        self.available_modules = {}
-        for path in os.listdir('Modules'):
-            if path.lower().endswith('.py'):
-                # strip ending '.py'
-                path = path[:-3]
-                # populate dict
-                self.available_modules[path.lower()] = path
-
-        self.protected_modules = ('admin', 'logger')
 
         self.message_rex = re.compile(r"""
                 ^ # beginning of line
@@ -148,9 +217,9 @@ class PythagoreBot(irc.IRCClient):
 
     def connectionMade(self):
         """This function gets called whenever the bot gets connected to the network"""
-        self.logger = self.registerModule("Logger")
+        self.logger = self.modules.register("Logger")
         irc.IRCClient.connectionMade(self)
-        self.registerModule("Admin")
+        self.modules.register("Admin")
         self.observer = IRCObserver(self)
         self.observer.start()
 
@@ -349,12 +418,13 @@ class PythagoreBot(irc.IRCClient):
         # We refresh the channel's configuration
         self.session.refresh(self.channels[channel])
         word = self.strip_formatting(word)
-        if word in self.keywords and (self.keywords[word][1] in self.protected_modules or self.keywords[word][1] in self.channels[channel].modules):
-            if msg:
-                msg = self.u_(msg, channel)
-            method = self.keywords[word][0]
-            method(channel, nick, msg)
-            return True
+        if word in self.modules.keywords:
+            method, modulename = self.modules.keywords[word]
+            if modulename in self.modules.protected or modulename in self.channels[channel].modules:
+                if msg:
+                    msg = self.u_(msg, channel)
+                method(channel, nick, msg)
+                return True
         return False
 
     def signedOn(self):
@@ -373,8 +443,8 @@ class PythagoreBot(irc.IRCClient):
             pass
         else:
             for module in module_names:
-                if module.lower() not in self.modules:
-                    self.registerModule(module)
+                if module not in self.modules:
+                    self.modules.register(module)
 
         irc.IRCClient.join(self, self.to_encoding(channel, enc='UTF-8'))
 
@@ -413,62 +483,6 @@ class PythagoreBot(irc.IRCClient):
         """This gets called when the bot is kicked from a channel."""
         # try to rejoin channel
         self.join(channel)
-
-    def registerModule(self, modname):
-        """This registers a module. When it is already loaded, the module is first unloaded
-        to refresh its symbols."""
-        modname = modname.lower()
-        if modname in self.modules:
-            modpath = self.available_modules[modname]
-            # Module already there, let's reload it
-            self.modules[modname] = reload(self.modules[modname])
-            # and clean its symbols
-            self.unregisterModule(modname)
-        elif modname in self.available_modules:
-            modpath = self.available_modules[modname]
-            # Module not there, let's import it
-            self.modules[modname] = __import__("Modules/%s" % modpath)
-        else:
-            # this module doesn't exist ...
-            return
-
-        # Calls Module.Module(pythagore), to create an instance of the class
-        self.moduleinstances[modname] = getattr(
-            self.modules[modname],
-            modpath,
-        )(self);
-
-        try:
-            # We lookup the module name in the modules table
-            module = self.session.query(Module).filter(Module.name==modname).one()
-        except sa.exceptions.InvalidRequestError:
-            # If this exception, zero or two rows have been returned. We hope it's zero...
-            module = Module(modname)
-            self.session.save(module)
-            self.session.commit()
-
-        # We register all the symbols in the lookup table, which looks like :
-        # {
-        #   'keyword': (Module.Module.keyword_function, 'Module'),
-        #   ...
-        # }
-        for i in self.moduleinstances[modname].exports:
-            self.keywords[i] = (getattr(
-                    self.moduleinstances[modname],
-                    self.moduleinstances[modname].exports[i]
-                    ), module)
-
-        # We return the class instance, as a convenience for the Logger class
-        return self.moduleinstances[modname]
-
-    def unregisterModule(self, modname):
-        """This unregisters a module, by removing its symbols from the lookup table, and the corresponding Class instance"""
-        modname = modname.lower()
-        if modname in self.moduleinstances and modname not in self.protected_modules:
-            for i in self.moduleinstances[modname].exports:
-                if self.keywords[i][1] == modname:
-                    del self.keywords[i]
-            del self.moduleinstances[modname]
 
 class PythagoreBotConnector(protocol.ClientFactory):
     """A connector for PythagoreBots.

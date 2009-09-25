@@ -150,7 +150,6 @@ class PythagoreBot(irc.IRCClient):
         """This function gets called whenever the bot gets connected to the network"""
         self.logger = self.registerModule("Logger")
         irc.IRCClient.connectionMade(self)
-        self.conn_t = time.time()
         self.registerModule("Admin")
         self.observer = IRCObserver(self)
         self.observer.start()

@@ -30,10 +30,11 @@ class Uptime(PythagoreModule):
     def __init__(self, pythagore):
         PythagoreModule.__init__(self, pythagore)
         self.exports['uptime'] = 'uptime'
+        self.creat_t = time()
 
     def uptime(self, channel, nick, msg):
         self.bot.say(
             channel,
-            _("I've been on %(networkname)s for %(numseconds)s seconds !") % {'networkname': 'teepi', 'numseconds': (time() - self.bot.conn_t)}
+            _("I've been on %(networkname)s for %(numseconds)s seconds !") % {'networkname': 'teepi', 'numseconds': (time() - self.creat_t)}
         )
 

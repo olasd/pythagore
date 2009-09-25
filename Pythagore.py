@@ -27,7 +27,7 @@
 import re
 
 # system imports
-import time, sys, os
+import time, os
 
 # twisted imports
 from twisted.words.protocols import irc
@@ -51,7 +51,7 @@ from Mapped import Channel, Module
 from Shared import *
 
 
-class IRCObserver:
+class IRCObserver(object):
     """
     Log observer sending traceback messages to IRC when available
     """
@@ -64,19 +64,22 @@ class IRCObserver:
         except KeyError:
             self.logchannel = '#pythagore-dev'
 
-    def _emit(self, eventDict):
-        if 'failure' in eventDict:
-            text = eventDict['failure'].getTraceback().splitlines()
+    def _emit(self, event_dict):
+        """Send the message to irc"""
+        if 'failure' in event_dict:
+            text = event_dict['failure'].getTraceback().splitlines()
         else:
-            text = [str(m) for m in eventDict["message"]]
+            text = [str(m) for m in event_dict["message"]]
 
         for line in text:
             self.bot.msg(self.logchannel, line)
 
     def start(self):
+        """Start the logger"""
         log.addObserver(self._emit)
 
     def stop(self):
+        """Stop the logger"""
         log.removeObserver(self._emit)
 
 class PythagoreBot(irc.IRCClient):
@@ -84,7 +87,7 @@ class PythagoreBot(irc.IRCClient):
 
     def __init__(self, factory):
         # configuration, loaded at every connection
-        configfile = file("Config" + os.sep + "Pythagore" + ".yml", 'r')
+        configfile = file(os.path.join("Config", "Pythagore.yml"), 'r')
         self.conf = yaml.safe_load(configfile)
         configfile.close()
 

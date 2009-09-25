@@ -25,7 +25,7 @@
 
 import os
 
-class PythagoreModule:
+class PythagoreModule(object):
     """This is the class all Pythagore's Modules should subclass
     In fact it is quite empty..."""
 
@@ -34,39 +34,39 @@ class PythagoreModule:
         instance"""
         self.exports = {}
         self.bot = pythagore
-        self.loadConfig()
+        self.config = self.load_config()
         self.name = self.__class__.__name__
 
-    def loadConfig(self):
+    def load_config(self):
         """Configuration initialization. Override this if you do not want
         plaintext config"""
         try:
             import yaml
-        except:
-            self.config = {}
-            return
+        except ImportError:
+            return {}
 
         name = self.__class__.__name__
         try:
-            configfile = file("Config" + os.sep + name + ".yml", 'r')
-            self.config = yaml.safe_load(configfile)
+            configfile = file(os.path.join("Config", name + ".yml"), 'r')
+            config = yaml.safe_load(configfile)
             configfile.close()
-        except:
+        except IOError:
             print _("Config file for %(module)s not open !") % {'module': name}
-            self.config = {}
-            return
+            config = {}
+        return config
 
-    def storeConfig(self):
+    def save_config(self):
         """Configuration file save. Should be more or less failproof"""
         try:
             import yaml
-        except:
+        except ImportError:
             return
 
         name = self.__class__.__name__
         try:
-            newconfigfile = file("Config" + os.sep + name + ".new.yml", 'w')
+            newconfigfile = file(os.path.join("Config", name + ".new.yml"), 'w')
             yaml.dump(self.config, newconfigfile, default_flow_style=False)
-            os.rename("Config" + os.sep + name + ".new.yml","Config" + os.sep + name + ".yml")
-        except:
+            os.rename(os.path.join("Config", name + ".new.yml"),
+                      os.path.join("Config", name + ".yml"))
+        except IOError:
             return

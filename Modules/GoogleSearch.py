@@ -36,7 +36,7 @@ class GoogleSearch(PythagoreModule):
         self.exports = { 'google': 'googlequery' }
 
     def google(self, query='testing'):
-        url = 'http://google.com/uds/GwebSearch?callback=GwebSearch.RawCompletion&context=linux&lstkp=0&rsz=large&hl=' + self.config["lang"] + '&sig' + self.config["API_KEY"] + '&q=' + quote(query) + '&key=internal&v=1.0&nocache=7'
+        url = 'http://google.com/uds/GwebSearch?callback=GwebSearch.RawCompletion&context=linux&lstkp=0&rsz=large&hl=' + self.config["lang"] + '&sig' + self.config["API_KEY"] + '&q=' + quote(query.encode('utf-8')) + '&key=internal&v=1.0&nocache=7'
         fh = urlopen(url)
         result_string = " ".join(fh.readlines())
 
